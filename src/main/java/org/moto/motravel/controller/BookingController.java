@@ -23,7 +23,6 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/bookings")
 @Tag(name = "Booking", description = "Booking management APIs")
-@SecurityRequirement(name = "bearerAuth")
 public class BookingController {
 
     @Autowired
@@ -31,7 +30,7 @@ public class BookingController {
 
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
-    @Operation(summary = "Get all bookings (Admin only)")
+    @Operation(summary = "Get all bookings (Admin only)", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<List<Booking>> getAllBookings() {
         List<Booking> bookings = bookingService.getAllBookings();
         return ResponseEntity.ok(bookings);
@@ -39,7 +38,7 @@ public class BookingController {
 
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
-    @Operation(summary = "Get booking by ID")
+    @Operation(summary = "Get booking by ID", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<?> getBookingById(@PathVariable Long id) {
         return bookingService.getBookingById(id)
                 .map(booking -> {
@@ -56,7 +55,7 @@ public class BookingController {
 
     @GetMapping("/user")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
-    @Operation(summary = "Get bookings for the current user")
+    @Operation(summary = "Get bookings for the current user", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<List<Booking>> getUserBookings() {
         UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         // In a real application, you would get the user ID from the authenticated user
@@ -68,7 +67,7 @@ public class BookingController {
 
     @PostMapping
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
-    @Operation(summary = "Create a new booking")
+    @Operation(summary = "Create a new booking", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<?> createBooking(@Valid @RequestBody Booking booking) {
         try {
             // Set the user ID from the authenticated user
@@ -87,7 +86,7 @@ public class BookingController {
 
     @PatchMapping("/{id}/status")
     @PreAuthorize("hasRole('ADMIN')")
-    @Operation(summary = "Update booking status (Admin only)")
+    @Operation(summary = "Update booking status (Admin only)", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<?> updateBookingStatus(
             @PathVariable Long id,
             @RequestParam String status) {
@@ -102,7 +101,7 @@ public class BookingController {
 
     @PostMapping("/{id}/cancel")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
-    @Operation(summary = "Cancel a booking")
+    @Operation(summary = "Cancel a booking", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<?> cancelBooking(@PathVariable Long id) {
         return bookingService.getBookingById(id)
                 .map(booking -> {
@@ -124,7 +123,7 @@ public class BookingController {
 
     @GetMapping("/check-availability")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
-    @Operation(summary = "Check if a vehicle is available for booking in a specific time range")
+    @Operation(summary = "Check if a vehicle is available for booking in a specific time range", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<?> checkVehicleAvailability(
             @RequestParam Long vehicleId,
             @RequestParam LocalDateTime startTime,

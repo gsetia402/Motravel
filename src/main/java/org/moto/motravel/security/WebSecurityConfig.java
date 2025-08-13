@@ -59,7 +59,13 @@ public class WebSecurityConfig {
                     .requestMatchers(new AntPathRequestMatcher("/api-docs/**")).permitAll()
                     .requestMatchers(new AntPathRequestMatcher("/swagger-ui/**")).permitAll()
                     .requestMatchers(new AntPathRequestMatcher("/swagger-ui.html")).permitAll()
+                    .requestMatchers(new AntPathRequestMatcher("/v3/api-docs/**")).permitAll()
                     .requestMatchers(new AntPathRequestMatcher("/h2-console/**")).permitAll()
+                    // Allow public access to vehicle browsing endpoints
+                    .requestMatchers(new AntPathRequestMatcher("/api/vehicles", "GET")).permitAll()
+                    .requestMatchers(new AntPathRequestMatcher("/api/vehicles/*/", "GET")).permitAll()
+                    .requestMatchers(new AntPathRequestMatcher("/api/vehicles/available", "GET")).permitAll()
+                    .requestMatchers(new AntPathRequestMatcher("/api/vehicles/nearby", "GET")).permitAll()
                     .anyRequest().authenticated()
             );
         
