@@ -63,9 +63,22 @@ public class WebSecurityConfig {
                     .requestMatchers(new AntPathRequestMatcher("/h2-console/**")).permitAll()
                     // Allow public access to vehicle browsing endpoints
                     .requestMatchers(new AntPathRequestMatcher("/api/vehicles", "GET")).permitAll()
-                    .requestMatchers(new AntPathRequestMatcher("/api/vehicles/*/", "GET")).permitAll()
+                    .requestMatchers(new AntPathRequestMatcher("/api/vehicles/*", "GET")).permitAll()
                     .requestMatchers(new AntPathRequestMatcher("/api/vehicles/available", "GET")).permitAll()
                     .requestMatchers(new AntPathRequestMatcher("/api/vehicles/nearby", "GET")).permitAll()
+                    // Allow public access to hidden gems browsing endpoints
+                    .requestMatchers(new AntPathRequestMatcher("/api/hidden-gems", "GET")).permitAll()
+                    .requestMatchers(new AntPathRequestMatcher("/api/hidden-gems/*", "GET")).permitAll()
+                    .requestMatchers(new AntPathRequestMatcher("/api/hidden-gems/nearby", "GET")).permitAll()
+                    .requestMatchers(new AntPathRequestMatcher("/api/hidden-gems/stats", "GET")).permitAll()
+                    .requestMatchers(new AntPathRequestMatcher("/api/states", "GET")).permitAll()
+                    .requestMatchers(new AntPathRequestMatcher("/api/states/*", "GET")).permitAll()
+                    .requestMatchers(new AntPathRequestMatcher("/api/states/search", "GET")).permitAll()
+                    .requestMatchers(new AntPathRequestMatcher("/api/states/*/hidden-gems", "GET")).permitAll()
+                    .requestMatchers(new AntPathRequestMatcher("/api/adventure-types", "GET")).permitAll()
+                    .requestMatchers(new AntPathRequestMatcher("/api/adventure-types/*", "GET")).permitAll()
+                    .requestMatchers(new AntPathRequestMatcher("/api/adventure-types/search", "GET")).permitAll()
+                    .requestMatchers(new AntPathRequestMatcher("/api/adventure-types/*/hidden-gems", "GET")).permitAll()
                     .anyRequest().authenticated()
             );
         
