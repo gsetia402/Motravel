@@ -8,6 +8,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Set;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.HashSet;
 
 @Component
 public class DataInitializer implements CommandLineRunner {
@@ -21,19 +24,100 @@ public class DataInitializer implements CommandLineRunner {
     @Autowired
     private HiddenGemRepository hiddenGemRepository;
 
+    @Autowired
+    private TourPackageRepository tourPackageRepository;
+
     @Override
     public void run(String... args) throws Exception {
         // Initialize data only if tables are empty
         if (stateRepository.count() == 0) {
             initializeStates();
         }
-        
+
         if (adventureTypeRepository.count() == 0) {
             initializeAdventureTypes();
         }
-        
-        // Always call initializeHiddenGems as it has its own logic for handling existing data
+
         initializeHiddenGems();
+        initializeTourPackages();
+    }
+
+    private void initializeTourPackages() {
+        if (tourPackageRepository.count() > 0) {
+            return;
+        }
+
+        org.moto.motravel.model.TourPackage ladakhTour = new org.moto.motravel.model.TourPackage();
+        ladakhTour.setName("Ladakh Adventure - 6D/5N");
+        ladakhTour.setDescription("Experience the high-altitude deserts of Ladakh with visits to Pangong Lake, Nubra Valley, and monasteries.");
+        ladakhTour.setDurationDays(6);
+        ladakhTour.setStartingLocation("Leh");
+        ladakhTour.setEndingLocation("Leh");
+        ladakhTour.setBasePricePerPerson(new java.math.BigDecimal("24999"));
+        ladakhTour.setMaxGroupSize(20);
+        ladakhTour.setHighlights(new HashSet<>(List.of("Pangong Lake", "Khardung La", "Nubra Valley", "Diskit Monastery")));
+        ladakhTour.setImageUrls(new HashSet<>(List.of(
+                "https://images.unsplash.com/photo-1548013146-72479768bada",
+                "https://images.unsplash.com/photo-1538869606715-2a14f36ec1a2"
+        )));
+        ladakhTour.setAvailableDates(new HashSet<>(List.of(
+                LocalDate.now().plusDays(14),
+                LocalDate.now().plusDays(30),
+                LocalDate.now().plusDays(45)
+        )));
+
+        org.moto.motravel.model.ItineraryItem l1 = new org.moto.motravel.model.ItineraryItem();
+        l1.setDayNumber(1);
+        l1.setTitle("Arrive in Leh and Acclimatize");
+        l1.setDescription("Airport pickup, hotel check-in, rest and local market walk in evening.");
+        l1.setMealPlan("Dinner");
+        l1.setTourPackage(ladakhTour);
+
+        org.moto.motravel.model.ItineraryItem l2 = new org.moto.motravel.model.ItineraryItem();
+        l2.setDayNumber(2);
+        l2.setTitle("Sham Valley Tour");
+        l2.setDescription("Visit Magnetic Hill, Gurudwara Pathar Sahib, and Sangam.");
+        l2.setMealPlan("Breakfast, Dinner");
+        l2.setTourPackage(ladakhTour);
+
+        ladakhTour.setItinerary(List.of(l1, l2));
+        tourPackageRepository.save(ladakhTour);
+
+        org.moto.motravel.model.TourPackage keralaTour = new org.moto.motravel.model.TourPackage();
+        keralaTour.setName("Kerala Backwaters - 4D/3N");
+        keralaTour.setDescription("Explore Alleppey backwaters on a houseboat, Munnar tea gardens, and Kochi heritage.");
+        keralaTour.setDurationDays(4);
+        keralaTour.setStartingLocation("Kochi");
+        keralaTour.setEndingLocation("Kochi");
+        keralaTour.setBasePricePerPerson(new java.math.BigDecimal("14999"));
+        keralaTour.setMaxGroupSize(24);
+        keralaTour.setHighlights(new HashSet<>(List.of("Houseboat Stay", "Tea Gardens", "Kathakali Show")));
+        keralaTour.setImageUrls(new HashSet<>(List.of(
+                "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee"
+        )));
+        keralaTour.setAvailableDates(new HashSet<>(List.of(
+                LocalDate.now().plusDays(10),
+                LocalDate.now().plusDays(25)
+        )));
+
+        org.moto.motravel.model.ItineraryItem k1 = new org.moto.motravel.model.ItineraryItem();
+        k1.setDayNumber(1);
+        k1.setTitle("Kochi Sightseeing");
+        k1.setDescription("Fort Kochi, Chinese fishing nets, Mattancherry Palace.");
+        k1.setMealPlan("Breakfast");
+        k1.setTourPackage(keralaTour);
+
+        org.moto.motravel.model.ItineraryItem k2 = new org.moto.motravel.model.ItineraryItem();
+        k2.setDayNumber(2);
+        k2.setTitle("Munnar Day Trip");
+        k2.setDescription("Tea gardens, viewpoints, and local markets.");
+        k2.setMealPlan("Breakfast");
+        k2.setTourPackage(keralaTour);
+
+        keralaTour.setItinerary(List.of(k1, k2));
+        tourPackageRepository.save(keralaTour);
+
+        System.out.println("Initialized sample tour packages");
     }
 
     private void initializeStates() {

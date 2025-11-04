@@ -6,6 +6,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.moto.motravel.model.Booking;
 import org.moto.motravel.payload.response.MessageResponse;
+import org.moto.motravel.model.User;
+import org.moto.motravel.repository.UserRepository;
 import org.moto.motravel.service.BookingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -28,8 +30,11 @@ public class BookingController {
     @Autowired
     private BookingService bookingService;
 
+    @Autowired
+    private UserRepository userRepository;
+
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @Operation(summary = "Get all bookings (Admin only)", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<List<Booking>> getAllBookings() {
         List<Booking> bookings = bookingService.getAllBookings();
@@ -58,10 +63,9 @@ public class BookingController {
     @Operation(summary = "Get bookings for the current user", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<List<Booking>> getUserBookings() {
         UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        // In a real application, you would get the user ID from the authenticated user
-        // For simplicity, we're assuming the username is the user ID as a string
-        Long userId = Long.parseLong(userDetails.getUsername());
-        List<Booking> bookings = bookingService.getBookingsByUserId(userId);
+        User user = userRepository.findByUsername(userDetails.getUsername()).orElse(null);
+        if (user == null) return ResponseEntity.ok(java.util.List.of());
+        List<Booking> bookings = bookingService.getBookingsByUserId(user.getId());
         return ResponseEntity.ok(bookings);
     }
 
@@ -72,10 +76,10 @@ public class BookingController {
         try {
             // Set the user ID from the authenticated user
             UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-            // In a real application, you would get the user ID from the authenticated user
-            // For simplicity, we're assuming the username is the user ID as a string
-            Long userId = Long.parseLong(userDetails.getUsername());
-            booking.setUserId(userId);
+            User user = userRepository.findByUsername(userDetails.getUsername()).orElse(null);
+            if (user != null) {
+                booking.setUserId(user.getId());
+            }
             
             Booking createdBooking = bookingService.createBooking(booking);
             return new ResponseEntity<>(createdBooking, HttpStatus.CREATED);
@@ -150,8 +154,8 @@ public class BookingController {
         
         // User can only access their own bookings
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-        Long userId = Long.parseLong(userDetails.getUsername());
-        
-        return booking.getUserId().equals(userId);
+        User user = userRepository.findByUsername(userDetails.getUsername()).orElse(null);
+        if (user == null) return false;
+        return booking.getUserId() != null && booking.getUserId().equals(user.getId());
     }
 }

@@ -53,32 +53,27 @@ public class WebSecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.csrf(csrf -> csrf.disable())
+            .cors(cors -> {})
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .authorizeHttpRequests(auth -> 
-                auth.requestMatchers(new AntPathRequestMatcher("/api/auth/**")).permitAll()
-                    .requestMatchers(new AntPathRequestMatcher("/api-docs/**")).permitAll()
-                    .requestMatchers(new AntPathRequestMatcher("/swagger-ui/**")).permitAll()
-                    .requestMatchers(new AntPathRequestMatcher("/swagger-ui.html")).permitAll()
-                    .requestMatchers(new AntPathRequestMatcher("/v3/api-docs/**")).permitAll()
-                    .requestMatchers(new AntPathRequestMatcher("/h2-console/**")).permitAll()
-                    // Allow public access to vehicle browsing endpoints
-                    .requestMatchers(new AntPathRequestMatcher("/api/vehicles", "GET")).permitAll()
-                    .requestMatchers(new AntPathRequestMatcher("/api/vehicles/*", "GET")).permitAll()
-                    .requestMatchers(new AntPathRequestMatcher("/api/vehicles/available", "GET")).permitAll()
-                    .requestMatchers(new AntPathRequestMatcher("/api/vehicles/nearby", "GET")).permitAll()
-                    // Allow public access to hidden gems browsing endpoints
-                    .requestMatchers(new AntPathRequestMatcher("/api/hidden-gems", "GET")).permitAll()
-                    .requestMatchers(new AntPathRequestMatcher("/api/hidden-gems/*", "GET")).permitAll()
-                    .requestMatchers(new AntPathRequestMatcher("/api/hidden-gems/nearby", "GET")).permitAll()
-                    .requestMatchers(new AntPathRequestMatcher("/api/hidden-gems/stats", "GET")).permitAll()
-                    .requestMatchers(new AntPathRequestMatcher("/api/states", "GET")).permitAll()
-                    .requestMatchers(new AntPathRequestMatcher("/api/states/*", "GET")).permitAll()
-                    .requestMatchers(new AntPathRequestMatcher("/api/states/search", "GET")).permitAll()
-                    .requestMatchers(new AntPathRequestMatcher("/api/states/*/hidden-gems", "GET")).permitAll()
-                    .requestMatchers(new AntPathRequestMatcher("/api/adventure-types", "GET")).permitAll()
-                    .requestMatchers(new AntPathRequestMatcher("/api/adventure-types/*", "GET")).permitAll()
-                    .requestMatchers(new AntPathRequestMatcher("/api/adventure-types/search", "GET")).permitAll()
-                    .requestMatchers(new AntPathRequestMatcher("/api/adventure-types/*/hidden-gems", "GET")).permitAll()
+            .authorizeHttpRequests(auth -> auth
+                    .requestMatchers("/api/auth/signin", "/api/auth/signup").permitAll()
+                    .requestMatchers("/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
+                    .requestMatchers("/h2-console/**").permitAll()
+                    // Admin endpoints must have ADMIN authority
+                    .requestMatchers("/api/admin/**").hasAuthority("ROLE_ADMIN")
+                    // Vehicle bookings admin list
+                    .requestMatchers("/api/bookings").hasAuthority("ROLE_ADMIN")
+                    // Public vehicle endpoints
+                    .requestMatchers("/api/vehicles", "/api/vehicles/available", "/api/vehicles/nearby").permitAll()
+                    .requestMatchers("/api/vehicles/*").permitAll()
+                    // Public hidden gems endpoints
+                    .requestMatchers("/api/hidden-gems", "/api/hidden-gems/nearby", "/api/hidden-gems/stats").permitAll()
+                    .requestMatchers("/api/hidden-gems/*").permitAll()
+                    .requestMatchers("/api/states", "/api/states/search", "/api/states/*", "/api/states/*/hidden-gems").permitAll()
+                    .requestMatchers("/api/adventure-types", "/api/adventure-types/search", "/api/adventure-types/*", "/api/adventure-types/*/hidden-gems").permitAll()
+                    // Public tours endpoints
+                    .requestMatchers("/api/tours", "/api/tours/*", "/api/tours/*/availability").permitAll()
+                    .requestMatchers("/api/tours/*/book").permitAll()
                     .anyRequest().authenticated()
             );
         
@@ -89,5 +84,18 @@ public class WebSecurityConfig {
         http.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
         
         return http.build();
+    }
+
+    @Bean
+    public org.springframework.web.cors.CorsConfigurationSource corsConfigurationSource() {
+        var configuration = new org.springframework.web.cors.CorsConfiguration();
+        configuration.setAllowedOrigins(java.util.List.of("http://localhost:5173"));
+        configuration.setAllowedMethods(java.util.List.of("GET","POST","PUT","PATCH","DELETE","OPTIONS"));
+        configuration.setAllowedHeaders(java.util.List.of("Authorization","Cache-Control","Content-Type","X-Requested-With","Accept","Origin"));
+        configuration.setExposedHeaders(java.util.List.of("Authorization"));
+        configuration.setAllowCredentials(true);
+        var source = new org.springframework.web.cors.UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
     }
 }

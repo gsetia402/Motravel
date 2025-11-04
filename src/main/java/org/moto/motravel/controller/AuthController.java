@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @CrossOrigin(origins = "*", maxAge = 3600)
@@ -102,5 +103,23 @@ public class AuthController {
         userRepository.save(user);
 
         return ResponseEntity.ok(new MessageResponse("User registered successfully!"));
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<?> me() {
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null) return ResponseEntity.status(401).body(Map.of("error", "unauthenticated"));
+        var principal = auth.getPrincipal();
+        String username;
+        if (principal instanceof org.springframework.security.core.userdetails.User u) {
+            username = u.getUsername();
+        } else {
+            username = String.valueOf(principal);
+        }
+        var roles = auth.getAuthorities().stream().map(a -> a.getAuthority()).toList();
+        return ResponseEntity.ok(Map.of(
+                "username", username,
+                "authorities", roles
+        ));
     }
 }
