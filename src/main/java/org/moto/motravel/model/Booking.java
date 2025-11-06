@@ -43,4 +43,7 @@ public class Booking {
     
     @NotNull
     private String status; // PENDING, CONFIRMED, COMPLETED, CANCELLED
+
+    @Column(name = "vendor_id")
+    private Long vendorId;
 }

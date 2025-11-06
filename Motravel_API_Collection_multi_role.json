@@ -1,0 +1,96 @@
+{
+  "info": {
+    "_postman_id": "7f6f2dbd-7c1b-4f15-9d6b-21b5f1f3d2aa",
+    "name": "Motravel API Collection (Multi-Role)",
+    "description": "Postman collection for Motravel backend with Admin and Vendor endpoints",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:8080" },
+    { "key": "token", "value": "" }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [ { "key": "token", "value": "{{token}}", "type": "string" } ]
+  },
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Sign Up",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"testvendor\",\n  \"email\": \"testvendor@example.com\",\n  \"password\": \"password123\",\n  \"roles\": [\"vendor\"]\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/auth/signup", "host": ["{{base_url}}"], "path": ["api","auth","signup"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Sign In",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"admin123\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/auth/signin", "host": ["{{base_url}}"], "path": ["api","auth","signin"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Who Am I",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/auth/me", "host": ["{{base_url}}"], "path": ["api","auth","me"] }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Public - Catalog",
+      "item": [
+        { "name": "List Vehicles", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/vehicles", "host": ["{{base_url}}"], "path": ["api","vehicles"] } }, "response": [] },
+        { "name": "List Tours", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/tours", "host": ["{{base_url}}"], "path": ["api","tours"] } }, "response": [] }
+      ]
+    },
+    {
+      "name": "Admin - Vendors",
+      "item": [
+        { "name": "Create Vendor", "request": { "method": "POST", "header": [ { "key": "Content-Type", "value": "application/json" } ], "body": { "mode": "raw", "raw": "{\n  \"name\": \"Acme Adventures\",\n  \"email\": \"ops@acme.com\",\n  \"phone\": \"9999999999\",\n  \"status\": \"ACTIVE\"\n}" }, "url": { "raw": "{{base_url}}/api/admin/vendors", "host": ["{{base_url}}"], "path": ["api","admin","vendors"] } }, "response": [] },
+        { "name": "List Vendors", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/admin/vendors", "host": ["{{base_url}}"], "path": ["api","admin","vendors"] } }, "response": [] },
+        { "name": "Get Vendor By ID", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/admin/vendors/:id", "host": ["{{base_url}}"], "path": ["api","admin","vendors", ":id" ] } }, "response": [] },
+        { "name": "Update Vendor", "request": { "method": "PUT", "header": [ { "key": "Content-Type", "value": "application/json" } ], "body": { "mode": "raw", "raw": "{\n  \"name\": \"Acme Adventures Updated\",\n  \"email\": \"ops@acme.com\",\n  \"phone\": \"8888888888\",\n  \"status\": \"ACTIVE\"\n}" }, "url": { "raw": "{{base_url}}/api/admin/vendors/:id", "host": ["{{base_url}}"], "path": ["api","admin","vendors", ":id" ] } }, "response": [] },
+        { "name": "Set Vendor Status", "request": { "method": "PATCH", "url": { "raw": "{{base_url}}/api/admin/vendors/:id/status?status=INACTIVE", "host": ["{{base_url}}"], "path": ["api","admin","vendors", ":id", "status"], "query": [ {"key":"status","value":"INACTIVE"} ] } }, "response": [] }
+      ]
+    },
+    {
+      "name": "Admin - Tours & Vehicles",
+      "item": [
+        { "name": "Create Tour (with vendorId)", "request": { "method": "POST", "header": [ { "key": "Content-Type", "value": "application/json" } ], "body": { "mode": "raw", "raw": "{\n  \"name\": \"Test Tour\",\n  \"description\": \"...\",\n  \"durationDays\": 2,\n  \"startingLocation\": \"A\",\n  \"endingLocation\": \"B\",\n  \"basePricePerPerson\": 1000,\n  \"maxGroupSize\": 10,\n  \"highlights\": [],\n  \"imageUrls\": [],\n  \"availableDates\": [],\n  \"itinerary\": [],\n  \"vendorId\": 1\n}" }, "url": { "raw": "{{base_url}}/api/admin/tours", "host": ["{{base_url}}"], "path": ["api","admin","tours"] } }, "response": [] },
+        { "name": "List All Tours (admin)", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/admin/tours", "host": ["{{base_url}}"], "path": ["api","admin","tours"] } }, "response": [] },
+        { "name": "Create Vehicle (admin)", "request": { "method": "POST", "header": [ { "key": "Content-Type", "value": "application/json" } ], "body": { "mode": "raw", "raw": "{\n  \"model\": \"City\",\n  \"brand\": \"Honda\",\n  \"type\": \"car\",\n  \"latitude\": 19.1,\n  \"longitude\": 72.9,\n  \"hourlyPrice\": 300,\n  \"availability\": true,\n  \"vendorId\": 1\n}" }, "url": { "raw": "{{base_url}}/api/vehicles", "host": ["{{base_url}}"], "path": ["api","vehicles"] } }, "response": [] }
+      ]
+    },
+    {
+      "name": "Vendor - Tours",
+      "item": [
+        { "name": "My Tours (vendor)", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/vendor/tours", "host": ["{{base_url}}"], "path": ["api","vendor","tours"] } }, "response": [] },
+        { "name": "Create My Tour", "request": { "method": "POST", "header": [ { "key": "Content-Type", "value": "application/json" } ], "body": { "mode": "raw", "raw": "{\n  \"name\": \"Vendor Tour\",\n  \"description\": \"...\",\n  \"durationDays\": 1,\n  \"startingLocation\": \"X\",\n  \"endingLocation\": \"Y\",\n  \"basePricePerPerson\": 500,\n  \"maxGroupSize\": 8,\n  \"highlights\": [],\n  \"imageUrls\": [],\n  \"availableDates\": [],\n  \"itinerary\": []\n}" }, "url": { "raw": "{{base_url}}/api/vendor/tours", "host": ["{{base_url}}"], "path": ["api","vendor","tours"] } }, "response": [] }
+      ]
+    },
+    {
+      "name": "Vendor - Vehicles",
+      "item": [
+        { "name": "My Vehicles (vendor)", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/vendor/vehicles", "host": ["{{base_url}}"], "path": ["api","vendor","vehicles"] } }, "response": [] },
+        { "name": "Create My Vehicle", "request": { "method": "POST", "header": [ { "key": "Content-Type", "value": "application/json" } ], "body": { "mode": "raw", "raw": "{\n  \"model\": \"i20\",\n  \"brand\": \"Hyundai\",\n  \"type\": \"car\",\n  \"latitude\": 19.1,\n  \"longitude\": 72.9,\n  \"hourlyPrice\": 250,\n  \"availability\": true,\n  \"imageUrl\": \"\"\n}" }, "url": { "raw": "{{base_url}}/api/vendor/vehicles", "host": ["{{base_url}}"], "path": ["api","vendor","vehicles"] } }, "response": [] }
+      ]
+    }
+  ]
+}

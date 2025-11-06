@@ -61,6 +61,8 @@ public class WebSecurityConfig {
                     .requestMatchers("/h2-console/**").permitAll()
                     // Admin endpoints must have ADMIN authority
                     .requestMatchers("/api/admin/**").hasAuthority("ROLE_ADMIN")
+                    // Vendor endpoints: accessible to VENDORs and ADMINs
+                    .requestMatchers("/api/vendor/**").hasAnyAuthority("ROLE_VENDOR", "ROLE_ADMIN")
                     // Vehicle bookings admin list
                     .requestMatchers("/api/bookings").hasAuthority("ROLE_ADMIN")
                     // Public vehicle endpoints

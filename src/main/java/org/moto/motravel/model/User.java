@@ -42,4 +42,7 @@ public class User {
     @CollectionTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"))
     @Column(name = "role")
     private Set<String> roles = new HashSet<>();
+
+    @Column(name = "vendor_id")
+    private Long vendorId; // null for regular users and admins; set for vendor users
 }

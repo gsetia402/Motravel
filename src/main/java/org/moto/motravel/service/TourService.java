@@ -72,6 +72,8 @@ public class TourService {
         if (userId != null) {
             booking.setUserId(userId);
         }
+        // Set vendorId from tour package
+        booking.setVendorId(tour.getVendorId());
         return tourBookingRepository.save(booking);
     }
 

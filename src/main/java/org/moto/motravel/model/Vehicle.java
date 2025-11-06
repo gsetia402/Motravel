@@ -43,4 +43,7 @@ public class Vehicle {
     
     @NotNull
     private Boolean availability = true;
+
+    @Column(name = "vendor_id")
+    private Long vendorId;
 }

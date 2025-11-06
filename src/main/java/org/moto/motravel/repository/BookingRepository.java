@@ -23,6 +23,9 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     
     // Find bookings by user ID and status
     List<Booking> findByUserIdAndStatus(Long userId, String status);
+
+    // Find bookings by vendor
+    List<Booking> findByVendorId(Long vendorId);
     
     // Check if a vehicle is available for booking in a specific time range
     @Query("SELECT COUNT(b) > 0 FROM Booking b WHERE b.vehicleId = :vehicleId " +

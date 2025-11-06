@@ -6,4 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface TourPackageRepository extends JpaRepository<TourPackage, Long> {
+    java.util.List<TourPackage> findByVendorId(Long vendorId);
 }

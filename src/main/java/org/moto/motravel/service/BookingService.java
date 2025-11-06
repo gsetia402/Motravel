@@ -87,6 +87,8 @@ public class BookingService {
         
         // Set initial status
         booking.setStatus("PENDING");
+        // Set vendorId from vehicle
+        booking.setVendorId(vehicle.getVendorId());
         
         return bookingRepository.save(booking);
     }

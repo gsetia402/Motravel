@@ -16,4 +16,6 @@ public interface TourBookingRepository extends JpaRepository<TourBooking, Long> 
     int getBookedCountForDate(@Param("packageId") Long packageId, @Param("date") LocalDate date);
 
     java.util.List<TourBooking> findByUserId(Long userId);
+
+    java.util.List<TourBooking> findByVendorId(Long vendorId);
 }

@@ -78,6 +78,9 @@ public class TourPackage {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
+    @Column(name = "vendor_id")
+    private Long vendorId;
+
     // Getters and setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -114,4 +117,7 @@ public class TourPackage {
 
     public List<ItineraryItem> getItinerary() { return itinerary; }
     public void setItinerary(List<ItineraryItem> itinerary) { this.itinerary = itinerary; }
+
+    public Long getVendorId() { return vendorId; }
+    public void setVendorId(Long vendorId) { this.vendorId = vendorId; }
 }

@@ -117,9 +117,11 @@ public class AuthController {
             username = String.valueOf(principal);
         }
         var roles = auth.getAuthorities().stream().map(a -> a.getAuthority()).toList();
+        Long vendorId = userRepository.findByUsername(username).map(org.moto.motravel.model.User::getVendorId).orElse(null);
         return ResponseEntity.ok(Map.of(
                 "username", username,
-                "authorities", roles
+                "authorities", roles,
+                "vendorId", vendorId
         ));
     }
 }

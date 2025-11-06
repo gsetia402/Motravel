@@ -27,4 +27,6 @@ public interface VehicleRepository extends JpaRepository<Vehicle, Long> {
         @Param("longitude") Double longitude, 
         @Param("radius") Double radius
     );
+
+    List<Vehicle> findByVendorId(Long vendorId);
 }
