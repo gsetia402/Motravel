@@ -43,7 +43,7 @@ public class TourController {
 
     @GetMapping("/{id}")
     @Operation(summary = "Get tour package by ID")
-    public ResponseEntity<?> getTourById(@PathVariable Long id) {
+    public ResponseEntity<?> getTourById(@PathVariable String id) {
         TourPackage tour = tourService.getTourById(id);
         if (tour == null) return ResponseEntity.notFound().build();
         return ResponseEntity.ok(tour);
@@ -52,7 +52,7 @@ public class TourController {
     @GetMapping("/{id}/availability")
     @Operation(summary = "Check availability for a tour and date")
     public ResponseEntity<Map<String, Object>> checkAvailability(
-            @PathVariable Long id,
+            @PathVariable String id,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
             @RequestParam @Min(1) int guests
     ) {
@@ -63,7 +63,7 @@ public class TourController {
     @PostMapping("/{id}/book")
     @Operation(summary = "Create and confirm a booking for a tour")
     public ResponseEntity<?> bookTour(
-            @PathVariable Long id,
+            @PathVariable String id,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
             @RequestParam @Min(1) int adults,
             @RequestParam(defaultValue = "0") @Min(0) int children,
@@ -72,7 +72,7 @@ public class TourController {
             @RequestParam @NotBlank String contactPhone
     ) {
         try {
-            Long userId = null;
+            String userId = null;
             Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
             if (principal instanceof UserDetails userDetails) {
                 User user = userRepository.findByUsername(userDetails.getUsername()).orElse(null);
@@ -84,7 +84,7 @@ public class TourController {
                     "bookingId", booking.getBookingId(),
                     "status", booking.getStatus(),
                     "totalPrice", booking.getTotalPrice(),
-                    "tourId", booking.getTourPackage().getId(),
+                    "tourId", booking.getTourPackageId(),
                     "date", booking.getDate()
             ));
         } catch (IllegalArgumentException e) {

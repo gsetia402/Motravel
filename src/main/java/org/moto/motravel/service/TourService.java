@@ -6,7 +6,6 @@ import org.moto.motravel.repository.TourBookingRepository;
 import org.moto.motravel.repository.TourPackageRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -28,16 +27,19 @@ public class TourService {
         return tourPackageRepository.findAll();
     }
 
-    public TourPackage getTourById(Long id) {
+    public TourPackage getTourById(String id) {
         return tourPackageRepository.findById(id).orElse(null);
     }
 
-    public boolean checkAvailability(Long tourId, LocalDate date, int guests) {
+    public boolean checkAvailability(String tourId, LocalDate date, int guests) {
         TourPackage tour = getTourById(tourId);
         if (tour == null) return false;
         if (!tour.getAvailableDates().contains(date)) return false;
-        int booked = tourBookingRepository.getBookedCountForDate(tourId, date);
-        return booked + guests <= tour.getMaxGroupSize();
+        List<String> activeStatuses = java.util.List.of("PENDING", "CONFIRMED");
+        int booked = tourBookingRepository
+                .findByTourPackageIdAndDateAndStatusIn(tourId, date, activeStatuses)
+                .stream().mapToInt(b -> b.getAdults() + b.getChildren()).sum();
+        return booked + guests <= (tour.getMaxGroupSize() == null ? Integer.MAX_VALUE : tour.getMaxGroupSize());
     }
 
     public BigDecimal calculatePrice(TourPackage tour, int adults, int children) {
@@ -47,10 +49,9 @@ public class TourService {
         return adultTotal.add(childTotal).setScale(2, RoundingMode.HALF_UP);
     }
 
-    @Transactional
-    public TourBooking createBooking(Long tourId, LocalDate date, int adults, int children,
+    public TourBooking createBooking(String tourId, LocalDate date, int adults, int children,
                                      String contactName, String contactEmail, String contactPhone,
-                                     Long userId) {
+                                     String userId) {
         TourPackage tour = getTourById(tourId);
         if (tour == null) throw new IllegalArgumentException("Tour not found");
         int guests = adults + children;
@@ -59,7 +60,7 @@ public class TourService {
             throw new IllegalStateException("Selected date is not available or group size exceeds availability");
         }
         TourBooking booking = new TourBooking();
-        booking.setTourPackage(tour);
+        booking.setTourPackageId(tour.getId());
         booking.setDate(date);
         booking.setAdults(adults);
         booking.setChildren(children);
@@ -69,15 +70,13 @@ public class TourService {
         booking.setContactPhone(contactPhone);
         booking.setStatus("CONFIRMED");
         booking.setBookingId(generateBookingId());
-        if (userId != null) {
-            booking.setUserId(userId);
-        }
+        if (userId != null) booking.setUserId(userId);
         // Set vendorId from tour package
         booking.setVendorId(tour.getVendorId());
         return tourBookingRepository.save(booking);
     }
 
-    public java.util.List<TourBooking> getBookingsByUserId(Long userId) {
+    public java.util.List<TourBooking> getBookingsByUserId(String userId) {
         return tourBookingRepository.findByUserId(userId);
     }
 

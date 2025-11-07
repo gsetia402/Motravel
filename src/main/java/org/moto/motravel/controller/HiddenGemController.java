@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.moto.motravel.model.HiddenGem;
 import org.moto.motravel.payload.response.MessageResponse;
 import org.moto.motravel.service.HiddenGemBookmarkService;
+import org.moto.motravel.repository.UserRepository;
 import org.moto.motravel.service.HiddenGemService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -32,11 +33,14 @@ public class HiddenGemController {
     @Autowired
     private HiddenGemBookmarkService bookmarkService;
 
+    @Autowired
+    private UserRepository userRepository;
+
     @GetMapping
     @Operation(summary = "Get all hidden gems with optional filtering and pagination")
     public ResponseEntity<Page<HiddenGem>> getAllHiddenGems(
-            @Parameter(description = "State ID for filtering") @RequestParam(required = false) Long stateId,
-            @Parameter(description = "Adventure type IDs for filtering") @RequestParam(required = false) List<Long> adventureTypeIds,
+            @Parameter(description = "State ID for filtering") @RequestParam(required = false) String stateId,
+            @Parameter(description = "Adventure type IDs for filtering") @RequestParam(required = false) List<String> adventureTypeIds,
             @Parameter(description = "Search term for name/description") @RequestParam(required = false) String search,
             @Parameter(description = "Page number (0-based)") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Page size") @RequestParam(defaultValue = "10") int size,
@@ -55,7 +59,7 @@ public class HiddenGemController {
 
     @GetMapping("/{id}")
     @Operation(summary = "Get hidden gem by ID")
-    public ResponseEntity<?> getHiddenGemById(@PathVariable Long id) {
+    public ResponseEntity<?> getHiddenGemById(@PathVariable String id) {
         return hiddenGemService.getHiddenGemById(id)
                 .map(hiddenGem -> {
                     // Add bookmark status if user is authenticated
@@ -63,8 +67,9 @@ public class HiddenGemController {
                     if (auth != null && auth.isAuthenticated() && !"anonymousUser".equals(auth.getPrincipal())) {
                         try {
                             UserDetails userDetails = (UserDetails) auth.getPrincipal();
-                            Long userId = Long.parseLong(userDetails.getUsername());
-                            boolean isBookmarked = bookmarkService.isBookmarked(userId, id);
+                            String username = userDetails.getUsername();
+                            String userId = userRepository.findByUsername(username).map(u -> u.getId()).orElse(null);
+                            boolean isBookmarked = userId != null && bookmarkService.isBookmarked(userId, id);
                             
                             return ResponseEntity.ok(Map.of(
                                 "hiddenGem", hiddenGem,
@@ -95,10 +100,12 @@ public class HiddenGemController {
     @PostMapping("/{id}/bookmark")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     @Operation(summary = "Bookmark a hidden gem", security = @SecurityRequirement(name = "bearerAuth"))
-    public ResponseEntity<?> bookmarkHiddenGem(@PathVariable Long id) {
+    public ResponseEntity<?> bookmarkHiddenGem(@PathVariable String id) {
         try {
             UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-            Long userId = Long.parseLong(userDetails.getUsername());
+            String username = userDetails.getUsername();
+            String userId = userRepository.findByUsername(username).map(u -> u.getId()).orElse(null);
+            if (userId == null) return ResponseEntity.status(401).body(new MessageResponse("Unauthenticated"));
 
             bookmarkService.addBookmark(userId, id);
             return ResponseEntity.ok(new MessageResponse("Hidden gem bookmarked successfully"));
@@ -114,10 +121,12 @@ public class HiddenGemController {
     @DeleteMapping("/{id}/bookmark")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     @Operation(summary = "Remove bookmark from a hidden gem", security = @SecurityRequirement(name = "bearerAuth"))
-    public ResponseEntity<?> removeBookmark(@PathVariable Long id) {
+    public ResponseEntity<?> removeBookmark(@PathVariable String id) {
         try {
             UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-            Long userId = Long.parseLong(userDetails.getUsername());
+            String username = userDetails.getUsername();
+            String userId = userRepository.findByUsername(username).map(u -> u.getId()).orElse(null);
+            if (userId == null) return ResponseEntity.status(401).body(new MessageResponse("Unauthenticated"));
 
             bookmarkService.removeBookmark(userId, id);
             return ResponseEntity.ok(new MessageResponse("Bookmark removed successfully"));
@@ -131,10 +140,12 @@ public class HiddenGemController {
     @PostMapping("/{id}/toggle-bookmark")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     @Operation(summary = "Toggle bookmark status for a hidden gem", security = @SecurityRequirement(name = "bearerAuth"))
-    public ResponseEntity<?> toggleBookmark(@PathVariable Long id) {
+    public ResponseEntity<?> toggleBookmark(@PathVariable String id) {
         try {
             UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-            Long userId = Long.parseLong(userDetails.getUsername());
+            String username = userDetails.getUsername();
+            String userId = userRepository.findByUsername(username).map(u -> u.getId()).orElse(null);
+            if (userId == null) return ResponseEntity.status(401).body(new MessageResponse("Unauthenticated"));
 
             boolean isBookmarked = bookmarkService.toggleBookmark(userId, id);
             String message = isBookmarked ? "Hidden gem bookmarked successfully" : "Bookmark removed successfully";

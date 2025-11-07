@@ -1,91 +1,39 @@
 package org.moto.motravel.model;
 
-import jakarta.persistence.*;
-import org.hibernate.annotations.CreationTimestamp;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
-@Entity
-@Table(name = "hidden_gem_bookmarks")
-@IdClass(HiddenGemBookmarkId.class)
+@Document(collection = "hidden_gem_bookmarks")
 public class HiddenGemBookmark {
     @Id
-    @Column(name = "user_id")
-    private Long userId;
+    private String id;
 
-    @Id
-    @Column(name = "hidden_gem_id")
-    private Long hiddenGemId;
+    @Indexed
+    private String userId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "hidden_gem_id", insertable = false, updatable = false)
-    private HiddenGem hiddenGem;
+    @Indexed
+    private String hiddenGemId;
 
-    @CreationTimestamp
-    @Column(name = "bookmarked_at", nullable = false, updatable = false)
-    private LocalDateTime bookmarkedAt;
+    @CreatedDate
+    private Instant bookmarkedAt;
 
-    // Constructors
     public HiddenGemBookmark() {}
 
-    public HiddenGemBookmark(Long userId, Long hiddenGemId) {
+    public HiddenGemBookmark(String userId, String hiddenGemId) {
         this.userId = userId;
         this.hiddenGemId = hiddenGemId;
     }
 
-    // Getters and Setters
-    public Long getUserId() {
-        return userId;
-    }
-
-    public void setUserId(Long userId) {
-        this.userId = userId;
-    }
-
-    public Long getHiddenGemId() {
-        return hiddenGemId;
-    }
-
-    public void setHiddenGemId(Long hiddenGemId) {
-        this.hiddenGemId = hiddenGemId;
-    }
-
-    public HiddenGem getHiddenGem() {
-        return hiddenGem;
-    }
-
-    public void setHiddenGem(HiddenGem hiddenGem) {
-        this.hiddenGem = hiddenGem;
-    }
-
-    public LocalDateTime getBookmarkedAt() {
-        return bookmarkedAt;
-    }
-
-    public void setBookmarkedAt(LocalDateTime bookmarkedAt) {
-        this.bookmarkedAt = bookmarkedAt;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof HiddenGemBookmark)) return false;
-        HiddenGemBookmark that = (HiddenGemBookmark) o;
-        return userId != null && userId.equals(that.userId) &&
-               hiddenGemId != null && hiddenGemId.equals(that.hiddenGemId);
-    }
-
-    @Override
-    public int hashCode() {
-        return getClass().hashCode();
-    }
-
-    @Override
-    public String toString() {
-        return "HiddenGemBookmark{" +
-                "userId=" + userId +
-                ", hiddenGemId=" + hiddenGemId +
-                ", bookmarkedAt=" + bookmarkedAt +
-                '}';
-    }
+    public String getId() { return id; }
+    public void setId(String id) { this.id = id; }
+    public String getUserId() { return userId; }
+    public void setUserId(String userId) { this.userId = userId; }
+    public String getHiddenGemId() { return hiddenGemId; }
+    public void setHiddenGemId(String hiddenGemId) { this.hiddenGemId = hiddenGemId; }
+    public Instant getBookmarkedAt() { return bookmarkedAt; }
+    public void setBookmarkedAt(Instant bookmarkedAt) { this.bookmarkedAt = bookmarkedAt; }
 }

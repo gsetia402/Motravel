@@ -44,7 +44,7 @@ public class BookingController {
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     @Operation(summary = "Get booking by ID", security = @SecurityRequirement(name = "bearerAuth"))
-    public ResponseEntity<?> getBookingById(@PathVariable Long id) {
+    public ResponseEntity<?> getBookingById(@PathVariable String id) {
         return bookingService.getBookingById(id)
                 .map(booking -> {
                     // Check if the user is authorized to view this booking
@@ -92,7 +92,7 @@ public class BookingController {
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Update booking status (Admin only)", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<?> updateBookingStatus(
-            @PathVariable Long id,
+            @PathVariable String id,
             @RequestParam String status) {
         
         try {
@@ -106,7 +106,7 @@ public class BookingController {
     @PostMapping("/{id}/cancel")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     @Operation(summary = "Cancel a booking", security = @SecurityRequirement(name = "bearerAuth"))
-    public ResponseEntity<?> cancelBooking(@PathVariable Long id) {
+    public ResponseEntity<?> cancelBooking(@PathVariable String id) {
         return bookingService.getBookingById(id)
                 .map(booking -> {
                     // Check if the user is authorized to cancel this booking
@@ -129,7 +129,7 @@ public class BookingController {
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     @Operation(summary = "Check if a vehicle is available for booking in a specific time range", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<?> checkVehicleAvailability(
-            @RequestParam Long vehicleId,
+            @RequestParam String vehicleId,
             @RequestParam LocalDateTime startTime,
             @RequestParam LocalDateTime endTime) {
         

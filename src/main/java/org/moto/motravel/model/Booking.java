@@ -1,49 +1,42 @@
 package org.moto.motravel.model;
 
-import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
 
-@Entity
-@Table(name = "bookings")
+@Document(collection = "bookings")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class Booking {
-    
+
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-    
+    private String id;
+
     @NotNull
-    @Column(name = "user_id")
-    private Long userId;
-    
+    private String userId;
+
     @NotNull
-    @Column(name = "vehicle_id")
-    private Long vehicleId;
-    
+    private String vehicleId;
+
     @NotNull
-    @Column(name = "start_time")
     private LocalDateTime startTime;
-    
+
     @NotNull
-    @Column(name = "end_time")
     private LocalDateTime endTime;
-    
+
     @NotNull
     @Positive
-    @Column(name = "total_price")
     private Double totalPrice;
-    
+
     @NotNull
     private String status; // PENDING, CONFIRMED, COMPLETED, CANCELLED
 
-    @Column(name = "vendor_id")
-    private Long vendorId;
+    private String vendorId;
 }

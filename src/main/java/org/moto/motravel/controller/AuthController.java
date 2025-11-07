@@ -2,11 +2,14 @@ package org.moto.motravel.controller;
 
 import jakarta.validation.Valid;
 import org.moto.motravel.model.User;
+import org.moto.motravel.model.Vendor;
 import org.moto.motravel.payload.request.LoginRequest;
 import org.moto.motravel.payload.request.SignupRequest;
+import org.moto.motravel.payload.request.VendorSignupRequest;
 import org.moto.motravel.payload.response.JwtResponse;
 import org.moto.motravel.payload.response.MessageResponse;
 import org.moto.motravel.repository.UserRepository;
+import org.moto.motravel.repository.VendorRepository;
 import org.moto.motravel.security.jwt.JwtUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -35,6 +38,9 @@ public class AuthController {
     UserRepository userRepository;
 
     @Autowired
+    VendorRepository vendorRepository;
+
+    @Autowired
     PasswordEncoder encoder;
 
     @Autowired
@@ -54,6 +60,25 @@ public class AuthController {
                 .collect(Collectors.toList());
 
         User user = userRepository.findByUsername(userDetails.getUsername()).orElseThrow();
+
+        // Vendor approval gate: vendors can login only when APPROVED
+        if (user.getRoles() != null && user.getRoles().contains("ROLE_VENDOR")) {
+            if (user.getVendorId() == null) {
+                return ResponseEntity.status(403).body(new MessageResponse("Vendor account not linked."));
+            }
+            var vendorOpt = vendorRepository.findById(user.getVendorId());
+            if (vendorOpt.isEmpty()) {
+                return ResponseEntity.status(403).body(new MessageResponse("Vendor not found."));
+            }
+            var vendor = vendorOpt.get();
+            if (!"APPROVED".equalsIgnoreCase(vendor.getStatus())) {
+                String msg = switch (vendor.getStatus() == null ? "PENDING" : vendor.getStatus().toUpperCase()) {
+                    case "REJECTED" -> "Your vendor registration was rejected" + (vendor.getRejectionReason() != null ? ": " + vendor.getRejectionReason() : ".");
+                    default -> "Your vendor registration is pending approval.";
+                };
+                return ResponseEntity.status(403).body(new MessageResponse(msg));
+            }
+        }
 
         return ResponseEntity.ok(new JwtResponse(jwt,
                                                  user.getId(),
@@ -105,6 +130,41 @@ public class AuthController {
         return ResponseEntity.ok(new MessageResponse("User registered successfully!"));
     }
 
+    @PostMapping("/vendor-signup")
+    public ResponseEntity<?> vendorSignup(@Valid @RequestBody VendorSignupRequest request) {
+        if (userRepository.existsByUsername(request.getUsername())) {
+            return ResponseEntity.badRequest().body(new MessageResponse("Error: Username is already taken!"));
+        }
+        if (userRepository.existsByEmail(request.getEmail())) {
+            return ResponseEntity.badRequest().body(new MessageResponse("Error: Email is already in use!"));
+        }
+
+        // Create Vendor with PENDING status
+        Vendor vendor = new Vendor();
+        vendor.setName(request.getCompanyName());
+        vendor.setCompanyName(request.getCompanyName());
+        vendor.setEmail(request.getEmail());
+        vendor.setContactPhone(request.getContactPhone());
+        String dept = request.getDepartment() != null ? request.getDepartment().trim().toUpperCase() : "TOUR";
+        if (!dept.equals("TOUR") && !dept.equals("VEHICLE")) dept = "TOUR";
+        vendor.setDepartment(dept);
+        vendor.setStatus("PENDING");
+        vendor = vendorRepository.save(vendor);
+
+        // Create vendor User linked to Vendor
+        User user = new User();
+        user.setUsername(request.getUsername());
+        user.setEmail(request.getEmail());
+        user.setPassword(encoder.encode(request.getPassword()));
+        java.util.Set<String> roles = new java.util.HashSet<>();
+        roles.add("ROLE_VENDOR");
+        user.setRoles(roles);
+        user.setVendorId(vendor.getId());
+        userRepository.save(user);
+
+        return ResponseEntity.ok(new MessageResponse("Vendor registered successfully! Awaiting admin approval."));
+    }
+
     @GetMapping("/me")
     public ResponseEntity<?> me() {
         var auth = SecurityContextHolder.getContext().getAuthentication();
@@ -117,7 +177,7 @@ public class AuthController {
             username = String.valueOf(principal);
         }
         var roles = auth.getAuthorities().stream().map(a -> a.getAuthority()).toList();
-        Long vendorId = userRepository.findByUsername(username).map(org.moto.motravel.model.User::getVendorId).orElse(null);
+        String vendorId = userRepository.findByUsername(username).map(org.moto.motravel.model.User::getVendorId).orElse(null);
         return ResponseEntity.ok(Map.of(
                 "username", username,
                 "authorities", roles,

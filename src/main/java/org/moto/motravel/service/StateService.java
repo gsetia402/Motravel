@@ -2,31 +2,33 @@ package org.moto.motravel.service;
 
 import org.moto.motravel.model.State;
 import org.moto.motravel.repository.StateRepository;
+import org.moto.motravel.repository.HiddenGemRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
 
 @Service
-@Transactional
 public class StateService {
 
     @Autowired
     private StateRepository stateRepository;
 
+    @Autowired
+    private HiddenGemRepository hiddenGemRepository;
+
     /**
      * Get all states ordered by name
      */
     public List<State> getAllStates() {
-        return stateRepository.findAllOrderByName();
+        return stateRepository.findAllByOrderByNameAsc();
     }
 
     /**
      * Get state by ID
      */
-    public Optional<State> getStateById(Long id) {
+    public Optional<State> getStateById(String id) {
         return stateRepository.findById(id);
     }
 
@@ -50,7 +52,7 @@ public class StateService {
     /**
      * Update an existing state
      */
-    public State updateState(Long id, State stateDetails) {
+    public State updateState(String id, State stateDetails) {
         State state = stateRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("State not found with id: " + id));
 
@@ -67,14 +69,14 @@ public class StateService {
     /**
      * Delete a state
      */
-    public void deleteState(Long id) {
+    public void deleteState(String id) {
         State state = stateRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("State not found with id: " + id));
 
-        // Check if state has associated hidden gems
-        if (!state.getHiddenGems().isEmpty()) {
-            throw new IllegalStateException("Cannot delete state with associated hidden gems. " +
-                    "Please remove or reassign the hidden gems first.");
+        // Prevent deletion if any HiddenGem references this state
+        long refCount = hiddenGemRepository.countByStateId(id);
+        if (refCount > 0) {
+            throw new IllegalStateException("Cannot delete state referenced by hidden gems (" + refCount + ").");
         }
 
         stateRepository.delete(state);
@@ -84,7 +86,7 @@ public class StateService {
      * Search states by name
      */
     public List<State> searchStatesByName(String searchTerm) {
-        return stateRepository.findByNameContainingIgnoreCase(searchTerm);
+        return stateRepository.findByNameContainingIgnoreCaseOrderByNameAsc(searchTerm);
     }
 
     /**

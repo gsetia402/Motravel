@@ -1,26 +1,26 @@
 package org.moto.motravel.model;
 
-import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
-import org.hibernate.annotations.CreationTimestamp;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.Instant;
 
-@Entity
-@Table(name = "tour_bookings")
+@Document(collection = "tour_bookings")
 public class TourBooking {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private String id;
 
-    @Column(name = "booking_id", unique = true, nullable = false)
+    @Indexed(unique = true)
+    @NotBlank
     private String bookingId;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "tour_package_id", nullable = false)
-    private TourPackage tourPackage;
+    @NotBlank
+    private String tourPackageId;
 
     @NotNull
     private LocalDate date;
@@ -33,45 +33,37 @@ public class TourBooking {
 
     @NotNull
     @Positive
-    @Column(name = "total_price")
     private BigDecimal totalPrice;
 
     @NotBlank
-    @Column(name = "contact_name")
     private String contactName;
 
     @NotBlank
     @Email
-    @Column(name = "contact_email")
     private String contactEmail;
 
     @NotBlank
-    @Column(name = "contact_phone")
     private String contactPhone;
 
     @NotBlank
     private String status; // PENDING, CONFIRMED, CANCELLED
 
-    // Optional link to a user if the booking was made while authenticated
-    @Column(name = "user_id")
-    private Long userId;
+    private String userId; // optional
 
-    @Column(name = "vendor_id")
-    private Long vendorId;
+    private String vendorId;
 
-    @CreationTimestamp
-    @Column(name = "created_at", updatable = false, nullable = false)
-    private LocalDateTime createdAt;
+    @CreatedDate
+    private Instant createdAt;
 
     // Getters and setters
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public String getId() { return id; }
+    public void setId(String id) { this.id = id; }
 
     public String getBookingId() { return bookingId; }
     public void setBookingId(String bookingId) { this.bookingId = bookingId; }
 
-    public TourPackage getTourPackage() { return tourPackage; }
-    public void setTourPackage(TourPackage tourPackage) { this.tourPackage = tourPackage; }
+    public String getTourPackageId() { return tourPackageId; }
+    public void setTourPackageId(String tourPackageId) { this.tourPackageId = tourPackageId; }
 
     public LocalDate getDate() { return date; }
     public void setDate(LocalDate date) { this.date = date; }
@@ -97,12 +89,12 @@ public class TourBooking {
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
 
-    public Long getUserId() { return userId; }
-    public void setUserId(Long userId) { this.userId = userId; }
+    public String getUserId() { return userId; }
+    public void setUserId(String userId) { this.userId = userId; }
 
-    public Long getVendorId() { return vendorId; }
-    public void setVendorId(Long vendorId) { this.vendorId = vendorId; }
+    public String getVendorId() { return vendorId; }
+    public void setVendorId(String vendorId) { this.vendorId = vendorId; }
 
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    public Instant getCreatedAt() { return createdAt; }
+    public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
 }

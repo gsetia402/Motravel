@@ -40,7 +40,7 @@ public class AdminHiddenGemController {
 
     @PutMapping("/{id}")
     @Operation(summary = "Update a hidden gem (Admin only)")
-    public ResponseEntity<?> updateHiddenGem(@PathVariable Long id, @Valid @RequestBody HiddenGem hiddenGemDetails) {
+    public ResponseEntity<?> updateHiddenGem(@PathVariable String id, @Valid @RequestBody HiddenGem hiddenGemDetails) {
         try {
             HiddenGem updatedGem = hiddenGemService.updateHiddenGem(id, hiddenGemDetails);
             return ResponseEntity.ok(updatedGem);
@@ -54,7 +54,7 @@ public class AdminHiddenGemController {
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete a hidden gem (Admin only)")
-    public ResponseEntity<?> deleteHiddenGem(@PathVariable Long id) {
+    public ResponseEntity<?> deleteHiddenGem(@PathVariable String id) {
         try {
             hiddenGemService.deleteHiddenGem(id);
             return ResponseEntity.ok(new MessageResponse("Hidden gem deleted successfully"));
@@ -68,7 +68,7 @@ public class AdminHiddenGemController {
 
     @GetMapping("/{id}")
     @Operation(summary = "Get hidden gem by ID (Admin view with all details)")
-    public ResponseEntity<?> getHiddenGemById(@PathVariable Long id) {
+    public ResponseEntity<?> getHiddenGemById(@PathVariable String id) {
         return hiddenGemService.getHiddenGemById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());

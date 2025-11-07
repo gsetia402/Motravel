@@ -34,7 +34,7 @@ public class StateController {
 
     @GetMapping("/{id}")
     @Operation(summary = "Get state by ID")
-    public ResponseEntity<?> getStateById(@PathVariable Long id) {
+    public ResponseEntity<?> getStateById(@PathVariable String id) {
         return stateService.getStateById(id)
                 .map(state -> {
                     long hiddenGemsCount = hiddenGemService.getHiddenGemsCountByState(id);
@@ -57,7 +57,7 @@ public class StateController {
     @GetMapping("/{id}/hidden-gems")
     @Operation(summary = "Get hidden gems for a specific state")
     public ResponseEntity<?> getHiddenGemsByState(
-            @PathVariable Long id,
+            @PathVariable String id,
             @Parameter(description = "Page number (0-based)") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Page size") @RequestParam(defaultValue = "10") int size,
             @Parameter(description = "Sort field") @RequestParam(defaultValue = "createdAt") String sortBy,

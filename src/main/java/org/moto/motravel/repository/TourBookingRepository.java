@@ -1,21 +1,19 @@
 package org.moto.motravel.repository;
 
 import org.moto.motravel.model.TourBooking;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
+import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Repository
-public interface TourBookingRepository extends JpaRepository<TourBooking, Long> {
+public interface TourBookingRepository extends MongoRepository<TourBooking, String> {
     boolean existsByBookingId(String bookingId);
 
-    @Query("SELECT COALESCE(SUM(b.adults + b.children), 0) FROM TourBooking b WHERE b.tourPackage.id = :packageId AND b.date = :date AND b.status IN ('PENDING','CONFIRMED')")
-    int getBookedCountForDate(@Param("packageId") Long packageId, @Param("date") LocalDate date);
+    List<TourBooking> findByTourPackageIdAndDateAndStatusIn(String tourPackageId, LocalDate date, List<String> statuses);
 
-    java.util.List<TourBooking> findByUserId(Long userId);
+    List<TourBooking> findByUserId(String userId);
 
-    java.util.List<TourBooking> findByVendorId(Long vendorId);
+    List<TourBooking> findByVendorId(String vendorId);
 }

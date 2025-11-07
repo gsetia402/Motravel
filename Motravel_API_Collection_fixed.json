@@ -52,6 +52,26 @@
             "description": "Login and get JWT token"
           },
           "response": []
+        },
+        {
+          "name": "Vendor Sign Up",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"vendoruser\",\n  \"email\": \"vendor@example.com\",\n  \"password\": \"password123\",\n  \"companyName\": \"Vendor Company\",\n  \"contactPhone\": \"9999999999\",\n  \"department\": \"TOUR\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/auth/vendor-signup",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api","auth","vendor-signup"]
+            },
+            "description": "Register a vendor (PENDING approval)"
+          },
+          "response": []
         }
       ]
     },
@@ -80,11 +100,11 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://localhost:8080/api/vehicles/1",
+              "raw": "http://localhost:8080/api/vehicles/{{vehicleId}}",
               "protocol": "http",
               "host": ["localhost"],
               "port": "8080",
-              "path": ["api","vehicles","1"]
+              "path": ["api","vehicles","{{vehicleId}}"]
             },
             "description": "Get vehicle by ID"
           },
@@ -195,7 +215,7 @@
             "header": [ { "key": "Content-Type", "value": "application/json" } ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"vehicleId\": 1,\n  \"startTime\": \"2025-08-10T10:00:00\",\n  \"endTime\": \"2025-08-10T14:00:00\"\n}"
+              "raw": "{\n  \"vehicleId\": \"{{vehicleId}}\",\n  \"startTime\": \"2025-08-10T10:00:00\",\n  \"endTime\": \"2025-08-10T14:00:00\"\n}"
             },
             "url": {
               "raw": "http://localhost:8080/api/bookings",
@@ -215,11 +235,11 @@
             "method": "PATCH",
             "header": [],
             "url": {
-              "raw": "http://localhost:8080/api/bookings/1/status?status=CONFIRMED",
+              "raw": "http://localhost:8080/api/bookings/{{bookingId}}/status?status=CONFIRMED",
               "protocol": "http",
               "host": ["localhost"],
               "port": "8080",
-              "path": ["api","bookings","1","status"],
+              "path": ["api","bookings","{{bookingId}}","status"],
               "query": [ {"key":"status","value":"CONFIRMED"} ]
             },
             "description": "Update booking status (Admin only)"
@@ -233,11 +253,11 @@
             "method": "POST",
             "header": [],
             "url": {
-              "raw": "http://localhost:8080/api/bookings/1/cancel",
+              "raw": "http://localhost:8080/api/bookings/{{bookingId}}/cancel",
               "protocol": "http",
               "host": ["localhost"],
               "port": "8080",
-              "path": ["api","bookings","1","cancel"]
+              "path": ["api","bookings","{{bookingId}}","cancel"]
             },
             "description": "Cancel a booking"
           },
@@ -270,11 +290,11 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://localhost:8080/api/tours/1",
+              "raw": "http://localhost:8080/api/tours/{{tourId}}",
               "protocol": "http",
               "host": ["localhost"],
               "port": "8080",
-              "path": ["api","tours","1"]
+              "path": ["api","tours","{{tourId}}"]
             },
             "description": "Get a tour by ID"
           },
@@ -286,11 +306,11 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://localhost:8080/api/tours/1/availability?date=2025-12-25&guests=2",
+              "raw": "http://localhost:8080/api/tours/{{tourId}}/availability?date=2025-12-25&guests=2",
               "protocol": "http",
               "host": ["localhost"],
               "port": "8080",
-              "path": ["api","tours","1","availability"],
+              "path": ["api","tours","{{tourId}}","availability"],
               "query": [
                 {"key":"date","value":"2025-12-25"},
                 {"key":"guests","value":"2"}
@@ -307,11 +327,11 @@
             "method": "POST",
             "header": [],
             "url": {
-              "raw": "http://localhost:8080/api/tours/1/book?date=2025-12-25&adults=2&children=0&contactName=John%20Doe&contactEmail=john@example.com&contactPhone=9999999999",
+              "raw": "http://localhost:8080/api/tours/{{tourId}}/book?date=2025-12-25&adults=2&children=0&contactName=John%20Doe&contactEmail=john@example.com&contactPhone=9999999999",
               "protocol": "http",
               "host": ["localhost"],
               "port": "8080",
-              "path": ["api","tours","1","book"],
+              "path": ["api","tours","{{tourId}}","book"],
               "query": [
                 {"key":"date","value":"2025-12-25"},
                 {"key":"adults","value":"2"},
@@ -371,13 +391,103 @@
             "method": "POST",
             "header": [],
             "url": {
-              "raw": "http://localhost:8080/api/admin/tour-bookings/1/cancel",
+              "raw": "http://localhost:8080/api/admin/tour-bookings/{{tourBookingId}}/cancel",
               "protocol": "http",
               "host": ["localhost"],
               "port": "8080",
-              "path": ["api","admin","tour-bookings","1","cancel"]
+              "path": ["api","admin","tour-bookings","{{tourBookingId}}","cancel"]
             },
             "description": "Cancel a tour booking (Admin only)"
+          },
+          "response": []
+        },
+        {
+          "name": "Vendor Requests (PENDING)",
+          "request": {
+            "auth": {"type":"bearer","bearer":[{"key":"token","value":"{{jwt_token}}","type":"string"}]},
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/admin/vendors/registration-requests?status=PENDING",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api","admin","vendors","registration-requests"],
+              "query": [ {"key":"status","value":"PENDING"} ]
+            },
+            "description": "List vendor registration requests by status"
+          },
+          "response": []
+        },
+        {
+          "name": "Approve Vendor",
+          "request": {
+            "auth": {"type":"bearer","bearer":[{"key":"token","value":"{{jwt_token}}","type":"string"}]},
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/admin/vendors/{{vendorId}}/approve",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api","admin","vendors","{{vendorId}}","approve"]
+            },
+            "description": "Approve vendor registration"
+          },
+          "response": []
+        },
+        {
+          "name": "Reject Vendor",
+          "request": {
+            "auth": {"type":"bearer","bearer":[{"key":"token","value":"{{jwt_token}}","type":"string"}]},
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"reason\": \"Incomplete documents\"\n}" },
+            "url": {
+              "raw": "http://localhost:8080/api/admin/vendors/{{vendorId}}/reject",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api","admin","vendors","{{vendorId}}","reject"]
+            },
+            "description": "Reject vendor registration with optional reason"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Vendor Dashboard",
+      "item": [
+        {
+          "name": "Summary",
+          "request": {
+            "auth": {"type":"bearer","bearer":[{"key":"token","value":"{{jwt_token}}","type":"string"}]},
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/vendor/dashboard/summary",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api","vendor","dashboard","summary"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Bookings (by department)",
+          "request": {
+            "auth": {"type":"bearer","bearer":[{"key":"token","value":"{{jwt_token}}","type":"string"}]},
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/vendor/dashboard/bookings",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api","vendor","dashboard","bookings"]
+            }
           },
           "response": []
         }

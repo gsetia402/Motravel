@@ -29,7 +29,7 @@ public class VendorToursController {
     @Autowired private TourPackageRepository tourPackageRepository;
     @Autowired private UserRepository userRepository;
 
-    private Long currentVendorId() {
+    private String currentVendorId() {
         var auth = SecurityContextHolder.getContext().getAuthentication();
         String username = auth.getName();
         return userRepository.findByUsername(username).map(User::getVendorId).orElse(null);
@@ -37,10 +37,10 @@ public class VendorToursController {
 
     @GetMapping
     @Operation(summary = "List my tour packages (vendor) or by vendorId (admin)")
-    public ResponseEntity<List<TourPackage>> list(@RequestParam(required = false) Long vendorId) {
+    public ResponseEntity<List<TourPackage>> list(@RequestParam(required = false) String vendorId) {
         var auth = SecurityContextHolder.getContext().getAuthentication();
         boolean isAdmin = auth.getAuthorities().stream().anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
-        Long vid = isAdmin ? (vendorId != null ? vendorId : currentVendorId()) : currentVendorId();
+        String vid = isAdmin ? (vendorId != null ? vendorId : currentVendorId()) : currentVendorId();
         if (vid == null && !isAdmin) return ResponseEntity.status(403).<List<TourPackage>>build();
         List<TourPackage> list = (vid == null) ? tourPackageRepository.findAll() : tourPackageRepository.findByVendorId(vid);
         return ResponseEntity.ok(list);
@@ -49,7 +49,7 @@ public class VendorToursController {
     @PostMapping
     @Operation(summary = "Create a tour package for current vendor")
     public ResponseEntity<?> create(@Valid @RequestBody TourPackage tour) {
-        Long vid = currentVendorId();
+        String vid = currentVendorId();
         if (vid == null) return ResponseEntity.status(403).body(new MessageResponse("No vendor assigned to user"));
         tour.setVendorId(vid);
         TourPackage saved = tourPackageRepository.save(tour);
@@ -58,8 +58,8 @@ public class VendorToursController {
 
     @PutMapping("/{id}")
     @Operation(summary = "Update my tour package")
-    public ResponseEntity<?> update(@PathVariable Long id, @Valid @RequestBody TourPackage updates) {
-        Long vid = currentVendorId();
+    public ResponseEntity<?> update(@PathVariable String id, @Valid @RequestBody TourPackage updates) {
+        String vid = currentVendorId();
         var opt = tourPackageRepository.findById(id);
         if (opt.isEmpty()) {
             return ResponseEntity.status(404).body(new MessageResponse("Tour package not found or not owned by vendor"));
@@ -84,8 +84,8 @@ public class VendorToursController {
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete my tour package")
-    public ResponseEntity<?> delete(@PathVariable Long id) {
-        Long vid = currentVendorId();
+    public ResponseEntity<?> delete(@PathVariable String id) {
+        String vid = currentVendorId();
         var opt = tourPackageRepository.findById(id);
         if (opt.isEmpty()) {
             return ResponseEntity.status(404).body(new MessageResponse("Tour package not found or not owned by vendor"));

@@ -42,7 +42,7 @@ public class AdminStateController {
 
     @PutMapping("/{id}")
     @Operation(summary = "Update a state (Admin only)")
-    public ResponseEntity<?> updateState(@PathVariable Long id, @Valid @RequestBody State stateDetails) {
+    public ResponseEntity<?> updateState(@PathVariable String id, @Valid @RequestBody State stateDetails) {
         try {
             State updatedState = stateService.updateState(id, stateDetails);
             return ResponseEntity.ok(updatedState);
@@ -56,7 +56,7 @@ public class AdminStateController {
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete a state (Admin only)")
-    public ResponseEntity<?> deleteState(@PathVariable Long id) {
+    public ResponseEntity<?> deleteState(@PathVariable String id) {
         try {
             stateService.deleteState(id);
             return ResponseEntity.ok(new MessageResponse("State deleted successfully"));
@@ -79,7 +79,7 @@ public class AdminStateController {
 
     @GetMapping("/{id}")
     @Operation(summary = "Get state by ID (Admin view)")
-    public ResponseEntity<?> getStateById(@PathVariable Long id) {
+    public ResponseEntity<?> getStateById(@PathVariable String id) {
         return stateService.getStateById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());

@@ -34,7 +34,7 @@ public class AdventureTypeController {
 
     @GetMapping("/{id}")
     @Operation(summary = "Get adventure type by ID")
-    public ResponseEntity<?> getAdventureTypeById(@PathVariable Long id) {
+    public ResponseEntity<?> getAdventureTypeById(@PathVariable String id) {
         return adventureTypeService.getAdventureTypeById(id)
                 .map(adventureType -> {
                     long hiddenGemsCount = hiddenGemService.getHiddenGemsCountByAdventureType(id);
@@ -57,7 +57,7 @@ public class AdventureTypeController {
     @GetMapping("/{id}/hidden-gems")
     @Operation(summary = "Get hidden gems for a specific adventure type")
     public ResponseEntity<?> getHiddenGemsByAdventureType(
-            @PathVariable Long id,
+            @PathVariable String id,
             @Parameter(description = "Page number (0-based)") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Page size") @RequestParam(defaultValue = "10") int size,
             @Parameter(description = "Sort field") @RequestParam(defaultValue = "createdAt") String sortBy,

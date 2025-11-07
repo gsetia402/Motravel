@@ -1,8 +1,6 @@
 package org.moto.motravel.service;
 
-import org.moto.motravel.model.AdventureType;
 import org.moto.motravel.model.HiddenGem;
-import org.moto.motravel.model.State;
 import org.moto.motravel.repository.AdventureTypeRepository;
 import org.moto.motravel.repository.HiddenGemRepository;
 import org.moto.motravel.repository.StateRepository;
@@ -12,7 +10,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
 import java.util.List;
@@ -20,7 +17,6 @@ import java.util.Optional;
 import java.util.Set;
 
 @Service
-@Transactional
 public class HiddenGemService {
 
     @Autowired
@@ -44,70 +40,63 @@ public class HiddenGemService {
     /**
      * Get hidden gem by ID
      */
-    public Optional<HiddenGem> getHiddenGemById(Long id) {
+    public Optional<HiddenGem> getHiddenGemById(String id) {
         return hiddenGemRepository.findById(id);
     }
 
     /**
      * Search hidden gems with filters
      */
-    public Page<HiddenGem> searchHiddenGems(Long stateId, List<Long> adventureTypeIds, String searchTerm, 
+    public Page<HiddenGem> searchHiddenGems(String stateId, List<String> adventureTypeIds, String searchTerm, 
                                           int page, int size, String sortBy, String sortDirection) {
         Sort sort = Sort.by(Sort.Direction.fromString(sortDirection), sortBy);
         Pageable pageable = PageRequest.of(page, size, sort);
 
-        // Clean up parameters to avoid PostgreSQL type issues
-        if (searchTerm != null && searchTerm.trim().isEmpty()) {
-            searchTerm = null;
-        }
-        if (adventureTypeIds != null && adventureTypeIds.isEmpty()) {
-            adventureTypeIds = null;
-        }
+        if (adventureTypeIds != null && adventureTypeIds.isEmpty()) adventureTypeIds = null;
+        if (searchTerm != null && searchTerm.isBlank()) searchTerm = null; // reserved for future text search
 
-        // If no filters are applied, return all gems
-        if (stateId == null && adventureTypeIds == null && searchTerm == null) {
-            return hiddenGemRepository.findAll(pageable);
+        if (stateId != null) {
+            return hiddenGemRepository.findByStateId(stateId, pageable);
+        } else if (adventureTypeIds != null) {
+            return hiddenGemRepository.findByAdventureTypeIdsIn(adventureTypeIds, pageable);
         }
-
-        // Use the complex search query with cleaned parameters
-        return hiddenGemRepository.findWithFilters(stateId, adventureTypeIds, searchTerm, pageable);
+        return hiddenGemRepository.findAll(pageable);
     }
 
     /**
      * Find nearby hidden gems
      */
     public List<HiddenGem> findNearbyGems(Double latitude, Double longitude, Double radiusKm) {
-        if (radiusKm == null || radiusKm <= 0) {
-            radiusKm = 50.0; // Default 50km radius
-        }
-        return hiddenGemRepository.findNearbyGems(latitude, longitude, radiusKm);
+        // TODO: implement geo search using MongoTemplate.geoNear; return all for now
+        return hiddenGemRepository.findAll();
     }
 
     /**
      * Create a new hidden gem
      */
     public HiddenGem createHiddenGem(HiddenGem hiddenGem) {
-        // Validate state exists
-        State state = stateRepository.findById(hiddenGem.getState().getId())
-                .orElseThrow(() -> new IllegalArgumentException("State not found with id: " + hiddenGem.getState().getId()));
-        hiddenGem.setState(state);
-
-        // Validate and set adventure types
-        Set<AdventureType> validatedAdventureTypes = new HashSet<>();
-        for (AdventureType adventureType : hiddenGem.getAdventureTypes()) {
-            AdventureType validType = adventureTypeRepository.findById(adventureType.getId())
-                    .orElseThrow(() -> new IllegalArgumentException("Adventure type not found with id: " + adventureType.getId()));
-            validatedAdventureTypes.add(validType);
+        if (hiddenGem.getStateId() == null || stateRepository.findById(hiddenGem.getStateId()).isEmpty()) {
+            throw new IllegalArgumentException("State not found with id: " + hiddenGem.getStateId());
         }
-        hiddenGem.setAdventureTypes(validatedAdventureTypes);
-
+        if (hiddenGem.getAdventureTypeIds() != null && !hiddenGem.getAdventureTypeIds().isEmpty()) {
+            Set<String> validIds = new HashSet<>();
+            for (String atId : hiddenGem.getAdventureTypeIds()) {
+                if (adventureTypeRepository.findById(atId).isPresent()) validIds.add(atId);
+                else throw new IllegalArgumentException("Adventure type not found with id: " + atId);
+            }
+            hiddenGem.setAdventureTypeIds(validIds);
+        }
+        // derive GeoJSON location if coords present
+        if (hiddenGem.getLongitude() != null && hiddenGem.getLatitude() != null) {
+            hiddenGem.setLocation(new org.springframework.data.mongodb.core.geo.GeoJsonPoint(hiddenGem.getLongitude(), hiddenGem.getLatitude()));
+        }
         return hiddenGemRepository.save(hiddenGem);
     }
 
     /**
      * Update an existing hidden gem
      */
-    public HiddenGem updateHiddenGem(Long id, HiddenGem hiddenGemDetails) {
+    public HiddenGem updateHiddenGem(String id, HiddenGem hiddenGemDetails) {
         HiddenGem hiddenGem = hiddenGemRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Hidden gem not found with id: " + id));
 
@@ -123,21 +112,25 @@ public class HiddenGemService {
         hiddenGem.setImageUrls(hiddenGemDetails.getImageUrls());
 
         // Update state if provided
-        if (hiddenGemDetails.getState() != null && hiddenGemDetails.getState().getId() != null) {
-            State state = stateRepository.findById(hiddenGemDetails.getState().getId())
-                    .orElseThrow(() -> new IllegalArgumentException("State not found with id: " + hiddenGemDetails.getState().getId()));
-            hiddenGem.setState(state);
+        if (hiddenGemDetails.getStateId() != null) {
+            stateRepository.findById(hiddenGemDetails.getStateId())
+                    .orElseThrow(() -> new IllegalArgumentException("State not found with id: " + hiddenGemDetails.getStateId()));
+            hiddenGem.setStateId(hiddenGemDetails.getStateId());
         }
 
         // Update adventure types if provided
-        if (hiddenGemDetails.getAdventureTypes() != null && !hiddenGemDetails.getAdventureTypes().isEmpty()) {
-            Set<AdventureType> validatedAdventureTypes = new HashSet<>();
-            for (AdventureType adventureType : hiddenGemDetails.getAdventureTypes()) {
-                AdventureType validType = adventureTypeRepository.findById(adventureType.getId())
-                        .orElseThrow(() -> new IllegalArgumentException("Adventure type not found with id: " + adventureType.getId()));
-                validatedAdventureTypes.add(validType);
+        if (hiddenGemDetails.getAdventureTypeIds() != null && !hiddenGemDetails.getAdventureTypeIds().isEmpty()) {
+            Set<String> validated = new HashSet<>();
+            for (String atId : hiddenGemDetails.getAdventureTypeIds()) {
+                adventureTypeRepository.findById(atId)
+                        .orElseThrow(() -> new IllegalArgumentException("Adventure type not found with id: " + atId));
+                validated.add(atId);
             }
-            hiddenGem.setAdventureTypes(validatedAdventureTypes);
+            hiddenGem.setAdventureTypeIds(validated);
+        }
+
+        if (hiddenGem.getLongitude() != null && hiddenGem.getLatitude() != null) {
+            hiddenGem.setLocation(new org.springframework.data.mongodb.core.geo.GeoJsonPoint(hiddenGem.getLongitude(), hiddenGem.getLatitude()));
         }
 
         return hiddenGemRepository.save(hiddenGem);
@@ -146,7 +139,7 @@ public class HiddenGemService {
     /**
      * Delete a hidden gem
      */
-    public void deleteHiddenGem(Long id) {
+    public void deleteHiddenGem(String id) {
         HiddenGem hiddenGem = hiddenGemRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Hidden gem not found with id: " + id));
         hiddenGemRepository.delete(hiddenGem);
@@ -155,7 +148,7 @@ public class HiddenGemService {
     /**
      * Get hidden gems by state
      */
-    public Page<HiddenGem> getHiddenGemsByState(Long stateId, int page, int size, String sortBy, String sortDirection) {
+    public Page<HiddenGem> getHiddenGemsByState(String stateId, int page, int size, String sortBy, String sortDirection) {
         Sort sort = Sort.by(Sort.Direction.fromString(sortDirection), sortBy);
         Pageable pageable = PageRequest.of(page, size, sort);
         return hiddenGemRepository.findByStateId(stateId, pageable);
@@ -164,10 +157,10 @@ public class HiddenGemService {
     /**
      * Get hidden gems by adventure types
      */
-    public Page<HiddenGem> getHiddenGemsByAdventureTypes(List<Long> adventureTypeIds, int page, int size, String sortBy, String sortDirection) {
+    public Page<HiddenGem> getHiddenGemsByAdventureTypes(List<String> adventureTypeIds, int page, int size, String sortBy, String sortDirection) {
         Sort sort = Sort.by(Sort.Direction.fromString(sortDirection), sortBy);
         Pageable pageable = PageRequest.of(page, size, sort);
-        return hiddenGemRepository.findByAdventureTypeIds(adventureTypeIds, pageable);
+        return hiddenGemRepository.findByAdventureTypeIdsIn(adventureTypeIds, pageable);
     }
 
     /**
@@ -177,12 +170,12 @@ public class HiddenGemService {
         return hiddenGemRepository.count();
     }
 
-    public long getHiddenGemsCountByState(Long stateId) {
+    public long getHiddenGemsCountByState(String stateId) {
         return hiddenGemRepository.countByStateId(stateId);
     }
 
-    public long getHiddenGemsCountByAdventureType(Long adventureTypeId) {
-        return hiddenGemRepository.countByAdventureTypeId(adventureTypeId);
+    public long getHiddenGemsCountByAdventureType(String adventureTypeId) {
+        return hiddenGemRepository.countByAdventureTypeIdsContains(adventureTypeId);
     }
 
     /**
@@ -191,7 +184,7 @@ public class HiddenGemService {
     public String validateSortField(String sortBy) {
         // Define allowed sort fields
         Set<String> allowedSortFields = Set.of(
-            "id", "name", "createdAt", "updatedAt", "state.name", 
+            "id", "name", "createdAt", "updatedAt",
             "nearestCity", "bestTimeToVisit", "difficultyLevel"
         );
         

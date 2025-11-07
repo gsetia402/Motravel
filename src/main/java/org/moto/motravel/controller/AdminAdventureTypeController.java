@@ -42,7 +42,7 @@ public class AdminAdventureTypeController {
 
     @PutMapping("/{id}")
     @Operation(summary = "Update an adventure type (Admin only)")
-    public ResponseEntity<?> updateAdventureType(@PathVariable Long id, @Valid @RequestBody AdventureType adventureTypeDetails) {
+    public ResponseEntity<?> updateAdventureType(@PathVariable String id, @Valid @RequestBody AdventureType adventureTypeDetails) {
         try {
             AdventureType updatedType = adventureTypeService.updateAdventureType(id, adventureTypeDetails);
             return ResponseEntity.ok(updatedType);
@@ -56,7 +56,7 @@ public class AdminAdventureTypeController {
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete an adventure type (Admin only)")
-    public ResponseEntity<?> deleteAdventureType(@PathVariable Long id) {
+    public ResponseEntity<?> deleteAdventureType(@PathVariable String id) {
         try {
             adventureTypeService.deleteAdventureType(id);
             return ResponseEntity.ok(new MessageResponse("Adventure type deleted successfully"));
@@ -79,7 +79,7 @@ public class AdminAdventureTypeController {
 
     @GetMapping("/{id}")
     @Operation(summary = "Get adventure type by ID (Admin view)")
-    public ResponseEntity<?> getAdventureTypeById(@PathVariable Long id) {
+    public ResponseEntity<?> getAdventureTypeById(@PathVariable String id) {
         return adventureTypeService.getAdventureTypeById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());

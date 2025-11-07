@@ -1,43 +1,47 @@
 package org.moto.motravel.model;
 
-import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
-@Entity
-@Table(name = "vendors")
+@Document(collection = "vendors")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class Vendor {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private String id;
 
     @NotBlank
     private String name;
 
+    @NotBlank
+    private String companyName;
+
     @Email
     private String email;
 
-    private String phone;
+    private String contactPhone;
 
-    @Column(name = "status")
-    private String status = "ACTIVE"; // ACTIVE, INACTIVE
+    // Vendor department: TOUR (tour packages) or VEHICLE (vehicle rentals)
+    private String department; // "TOUR" or "VEHICLE"
 
-    @CreationTimestamp
-    @Column(name = "created_at", updatable = false, nullable = false)
-    private LocalDateTime createdAt;
+    private String status = "PENDING"; // PENDING, APPROVED, REJECTED
 
-    @UpdateTimestamp
-    @Column(name = "updated_at", nullable = false)
-    private LocalDateTime updatedAt;
+    private String rejectionReason;
+
+    @CreatedDate
+    private Instant createdAt;
+
+    @LastModifiedDate
+    private Instant updatedAt;
 }

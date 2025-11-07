@@ -49,7 +49,7 @@ public class TourAdminController {
 
     @PutMapping("/tours/{id}")
     @Operation(summary = "Update a tour package")
-    public ResponseEntity<?> updateTour(@PathVariable Long id, @Valid @RequestBody TourPackage tour) {
+    public ResponseEntity<?> updateTour(@PathVariable String id, @Valid @RequestBody TourPackage tour) {
         Optional<TourPackage> existing = tourPackageRepository.findById(id);
         if (existing.isEmpty()) return ResponseEntity.notFound().build();
         tour.setId(id);
@@ -59,7 +59,7 @@ public class TourAdminController {
 
     @DeleteMapping("/tours/{id}")
     @Operation(summary = "Delete a tour package")
-    public ResponseEntity<?> deleteTour(@PathVariable Long id) {
+    public ResponseEntity<?> deleteTour(@PathVariable String id) {
         if (!tourPackageRepository.existsById(id)) return ResponseEntity.notFound().build();
         tourPackageRepository.deleteById(id);
         return ResponseEntity.ok(new MessageResponse("Tour package deleted"));
@@ -75,7 +75,7 @@ public class TourAdminController {
 
     @GetMapping("/tour-bookings/{id}")
     @Operation(summary = "Get tour booking by id")
-    public ResponseEntity<?> getTourBooking(@PathVariable Long id) {
+    public ResponseEntity<?> getTourBooking(@PathVariable String id) {
         return tourBookingRepository.findById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
@@ -83,7 +83,7 @@ public class TourAdminController {
 
     @PatchMapping("/tour-bookings/{id}/status")
     @Operation(summary = "Update tour booking status")
-    public ResponseEntity<?> updateTourBookingStatus(@PathVariable Long id, @RequestParam String status) {
+    public ResponseEntity<?> updateTourBookingStatus(@PathVariable String id, @RequestParam String status) {
         return tourBookingRepository.findById(id)
                 .map(b -> {
                     b.setStatus(status);
@@ -94,7 +94,7 @@ public class TourAdminController {
 
     @PostMapping("/tour-bookings/{id}/cancel")
     @Operation(summary = "Cancel a tour booking")
-    public ResponseEntity<?> cancelTourBooking(@PathVariable Long id) {
+    public ResponseEntity<?> cancelTourBooking(@PathVariable String id) {
         return tourBookingRepository.findById(id)
                 .map(b -> {
                     b.setStatus("CANCELLED");

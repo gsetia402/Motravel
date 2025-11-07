@@ -5,7 +5,6 @@ import org.moto.motravel.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Set;
 import java.time.LocalDate;
@@ -71,14 +70,12 @@ public class DataInitializer implements CommandLineRunner {
         l1.setTitle("Arrive in Leh and Acclimatize");
         l1.setDescription("Airport pickup, hotel check-in, rest and local market walk in evening.");
         l1.setMealPlan("Dinner");
-        l1.setTourPackage(ladakhTour);
 
         org.moto.motravel.model.ItineraryItem l2 = new org.moto.motravel.model.ItineraryItem();
         l2.setDayNumber(2);
         l2.setTitle("Sham Valley Tour");
         l2.setDescription("Visit Magnetic Hill, Gurudwara Pathar Sahib, and Sangam.");
         l2.setMealPlan("Breakfast, Dinner");
-        l2.setTourPackage(ladakhTour);
 
         ladakhTour.setItinerary(List.of(l1, l2));
         tourPackageRepository.save(ladakhTour);
@@ -105,14 +102,12 @@ public class DataInitializer implements CommandLineRunner {
         k1.setTitle("Kochi Sightseeing");
         k1.setDescription("Fort Kochi, Chinese fishing nets, Mattancherry Palace.");
         k1.setMealPlan("Breakfast");
-        k1.setTourPackage(keralaTour);
 
         org.moto.motravel.model.ItineraryItem k2 = new org.moto.motravel.model.ItineraryItem();
         k2.setDayNumber(2);
         k2.setTitle("Munnar Day Trip");
         k2.setDescription("Tea gardens, viewpoints, and local markets.");
         k2.setMealPlan("Breakfast");
-        k2.setTourPackage(keralaTour);
 
         keralaTour.setItinerary(List.of(k1, k2));
         tourPackageRepository.save(keralaTour);
@@ -190,7 +185,7 @@ public class DataInitializer implements CommandLineRunner {
                 HiddenGem gem1 = new HiddenGem();
                 gem1.setName("Harishchandragad Fort");
                 gem1.setDescription("A magnificent hill fort known for its ancient caves, temples, and the famous Konkan Kada cliff. Perfect for night treks and camping under the stars.");
-                gem1.setState(maharashtra);
+                gem1.setStateId(maharashtra.getId());
                 gem1.setLatitude(19.3833);
                 gem1.setLongitude(73.7833);
                 gem1.setNearestCity("Malshej Ghat");
@@ -205,7 +200,7 @@ public class DataInitializer implements CommandLineRunner {
                 HiddenGem gem2 = new HiddenGem();
                 gem2.setName("Tosh Village");
                 gem2.setDescription("A serene village in Parvati Valley, offering breathtaking mountain views, traditional Himachali culture, and excellent trekking opportunities.");
-                gem2.setState(himachal);
+                gem2.setStateId(himachal.getId());
                 gem2.setLatitude(32.2396);
                 gem2.setLongitude(77.3269);
                 gem2.setNearestCity("Kasol");
@@ -220,7 +215,7 @@ public class DataInitializer implements CommandLineRunner {
                 HiddenGem gem3 = new HiddenGem();
                 gem3.setName("Chopta Meadows");
                 gem3.setDescription("Known as the 'Mini Switzerland of India', Chopta offers pristine meadows, rhododendron forests, and is the base for Tungnath trek.");
-                gem3.setState(uttarakhand);
+                gem3.setStateId(uttarakhand.getId());
                 gem3.setLatitude(30.4167);
                 gem3.setLongitude(79.1167);
                 gem3.setNearestCity("Rudraprayag");
@@ -235,7 +230,7 @@ public class DataInitializer implements CommandLineRunner {
                 HiddenGem gem4 = new HiddenGem();
                 gem4.setName("Kumta Beach");
                 gem4.setDescription("A pristine, less-crowded beach perfect for water sports, fishing, and watching spectacular sunsets. Rich in marine biodiversity.");
-                gem4.setState(kerala);
+                gem4.setStateId(kerala.getId());
                 gem4.setLatitude(14.4167);
                 gem4.setLongitude(74.4167);
                 gem4.setNearestCity("Kumta");
@@ -250,7 +245,7 @@ public class DataInitializer implements CommandLineRunner {
                 HiddenGem gem5 = new HiddenGem();
                 gem5.setName("Khimsar Sand Dunes");
                 gem5.setDescription("Lesser-known sand dunes offering authentic desert experience, camel safaris, and traditional Rajasthani culture away from crowded Jaisalmer.");
-                gem5.setState(rajasthan);
+                gem5.setStateId(rajasthan.getId());
                 gem5.setLatitude(27.0333);
                 gem5.setLongitude(73.0167);
                 gem5.setNearestCity("Khimsar");
@@ -405,7 +400,7 @@ public class DataInitializer implements CommandLineRunner {
         HiddenGem gem = new HiddenGem();
         gem.setName(name);
         gem.setDescription(description);
-        gem.setState(state);
+        if (state != null) gem.setStateId(state.getId());
         gem.setLatitude(latitude);
         gem.setLongitude(longitude);
         gem.setNearestCity(nearestCity);

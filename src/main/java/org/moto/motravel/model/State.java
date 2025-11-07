@@ -1,42 +1,32 @@
 package org.moto.motravel.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.util.HashSet;
-import java.util.Set;
-
-@Entity
-@Table(name = "states")
+@Document(collection = "states")
 public class State {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private String id;
 
     @NotBlank(message = "State name is required")
     @Size(max = 100, message = "State name must not exceed 100 characters")
-    @Column(nullable = false, unique = true)
+    @Indexed(unique = true)
     private String name;
 
-    @OneToMany(mappedBy = "state", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JsonIgnore
-    private Set<HiddenGem> hiddenGems = new HashSet<>();
-
-    // Constructors
     public State() {}
 
     public State(String name) {
         this.name = name;
     }
 
-    // Getters and Setters
-    public Long getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(String id) {
         this.id = id;
     }
 
@@ -46,34 +36,5 @@ public class State {
 
     public void setName(String name) {
         this.name = name;
-    }
-
-    public Set<HiddenGem> getHiddenGems() {
-        return hiddenGems;
-    }
-
-    public void setHiddenGems(Set<HiddenGem> hiddenGems) {
-        this.hiddenGems = hiddenGems;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof State)) return false;
-        State state = (State) o;
-        return id != null && id.equals(state.id);
-    }
-
-    @Override
-    public int hashCode() {
-        return getClass().hashCode();
-    }
-
-    @Override
-    public String toString() {
-        return "State{" +
-                "id=" + id +
-                ", name='" + name + '\'' +
-                '}';
     }
 }

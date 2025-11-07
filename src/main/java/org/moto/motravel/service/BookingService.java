@@ -6,7 +6,6 @@ import org.moto.motravel.repository.BookingRepository;
 import org.moto.motravel.repository.VehicleRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -32,32 +31,31 @@ public class BookingService {
     /**
      * Get booking by ID
      */
-    public Optional<Booking> getBookingById(Long id) {
+    public Optional<Booking> getBookingById(String id) {
         return bookingRepository.findById(id);
     }
 
     /**
      * Get bookings by user ID
      */
-    public List<Booking> getBookingsByUserId(Long userId) {
+    public List<Booking> getBookingsByUserId(String userId) {
         return bookingRepository.findByUserId(userId);
     }
 
     /**
      * Get bookings by vehicle ID
      */
-    public List<Booking> getBookingsByVehicleId(Long vehicleId) {
+    public List<Booking> getBookingsByVehicleId(String vehicleId) {
         return bookingRepository.findByVehicleId(vehicleId);
     }
 
     /**
      * Create a new booking
      */
-    @Transactional
     public Booking createBooking(Booking booking) {
-        // Check if vehicle is available for the requested time period
-        boolean isVehicleBooked = bookingRepository.isVehicleBookedInTimeRange(
-                booking.getVehicleId(), booking.getStartTime(), booking.getEndTime());
+        // Check if vehicle is available for the requested time period (exclude CANCELLED)
+        boolean isVehicleBooked = bookingRepository.existsByVehicleIdAndStatusNotInAndStartTimeLessThanEqualAndEndTimeGreaterThanEqual(
+                booking.getVehicleId(), java.util.List.of("CANCELLED"), booking.getEndTime(), booking.getStartTime());
 
         if (isVehicleBooked) {
             throw new IllegalStateException("Vehicle is not available for the requested time period");
@@ -96,8 +94,7 @@ public class BookingService {
     /**
      * Update booking status
      */
-    @Transactional
-    public Booking updateBookingStatus(Long bookingId, String status) {
+    public Booking updateBookingStatus(String bookingId, String status) {
         Optional<Booking> bookingOpt = bookingRepository.findById(bookingId);
         if (bookingOpt.isEmpty()) {
             throw new IllegalArgumentException("Booking not found");
@@ -112,15 +109,15 @@ public class BookingService {
     /**
      * Cancel booking
      */
-    @Transactional
-    public Booking cancelBooking(Long bookingId) {
+    public Booking cancelBooking(String bookingId) {
         return updateBookingStatus(bookingId, "CANCELLED");
     }
 
     /**
      * Check if a vehicle is available for booking in a specific time range
      */
-    public boolean isVehicleAvailableForBooking(Long vehicleId, LocalDateTime startTime, LocalDateTime endTime) {
-        return !bookingRepository.isVehicleBookedInTimeRange(vehicleId, startTime, endTime);
+    public boolean isVehicleAvailableForBooking(String vehicleId, LocalDateTime startTime, LocalDateTime endTime) {
+        return !bookingRepository.existsByVehicleIdAndStatusNotInAndStartTimeLessThanEqualAndEndTimeGreaterThanEqual(
+                vehicleId, java.util.List.of("CANCELLED"), endTime, startTime);
     }
 }

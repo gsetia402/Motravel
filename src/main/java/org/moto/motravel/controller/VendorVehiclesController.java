@@ -31,7 +31,7 @@ public class VendorVehiclesController {
     @Autowired private VehicleRepository vehicleRepository;
     @Autowired private UserRepository userRepository;
 
-    private Long currentVendorId() {
+    private String currentVendorId() {
         var auth = SecurityContextHolder.getContext().getAuthentication();
         String username = auth.getName();
         return userRepository.findByUsername(username).map(User::getVendorId).orElse(null);
@@ -39,10 +39,10 @@ public class VendorVehiclesController {
 
     @GetMapping
     @Operation(summary = "List my vehicles (vendor) or vehicles by vendorId (admin)")
-    public ResponseEntity<List<Vehicle>> list(@RequestParam(required = false) Long vendorId) {
+    public ResponseEntity<List<Vehicle>> list(@RequestParam(required = false) String vendorId) {
         var auth = SecurityContextHolder.getContext().getAuthentication();
         boolean isAdmin = auth.getAuthorities().stream().anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
-        Long vid = isAdmin ? (vendorId != null ? vendorId : currentVendorId()) : currentVendorId();
+        String vid = isAdmin ? (vendorId != null ? vendorId : currentVendorId()) : currentVendorId();
         if (vid == null && !isAdmin) return ResponseEntity.status(403).<List<Vehicle>>build();
         List<Vehicle> list = (vid == null) ? vehicleService.getAllVehicles() : vehicleRepository.findByVendorId(vid);
         return ResponseEntity.ok(list);
@@ -51,7 +51,7 @@ public class VendorVehiclesController {
     @PostMapping
     @Operation(summary = "Create a vehicle for the current vendor")
     public ResponseEntity<?> create(@Valid @RequestBody Vehicle vehicle) {
-        Long vid = currentVendorId();
+        String vid = currentVendorId();
         if (vid == null) return ResponseEntity.status(403).body(new MessageResponse("No vendor assigned to user"));
         vehicle.setVendorId(vid);
         Vehicle saved = vehicleService.saveVehicle(vehicle);
@@ -60,8 +60,8 @@ public class VendorVehiclesController {
 
     @PutMapping("/{id}")
     @Operation(summary = "Update my vehicle")
-    public ResponseEntity<?> update(@PathVariable Long id, @Valid @RequestBody Vehicle updates) {
-        Long vid = currentVendorId();
+    public ResponseEntity<?> update(@PathVariable String id, @Valid @RequestBody Vehicle updates) {
+        String vid = currentVendorId();
         var opt = vehicleRepository.findById(id);
         if (opt.isEmpty()) {
             return ResponseEntity.status(404).body(new MessageResponse("Vehicle not found or not owned by vendor"));
@@ -83,8 +83,8 @@ public class VendorVehiclesController {
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete my vehicle")
-    public ResponseEntity<?> delete(@PathVariable Long id) {
-        Long vid = currentVendorId();
+    public ResponseEntity<?> delete(@PathVariable String id) {
+        String vid = currentVendorId();
         var opt = vehicleRepository.findById(id);
         if (opt.isEmpty()) {
             return ResponseEntity.status(404).body(new MessageResponse("Vehicle not found or not owned by vendor"));

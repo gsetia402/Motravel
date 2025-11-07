@@ -2,31 +2,33 @@ package org.moto.motravel.service;
 
 import org.moto.motravel.model.AdventureType;
 import org.moto.motravel.repository.AdventureTypeRepository;
+import org.moto.motravel.repository.HiddenGemRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
 
 @Service
-@Transactional
 public class AdventureTypeService {
 
     @Autowired
     private AdventureTypeRepository adventureTypeRepository;
 
+    @Autowired
+    private HiddenGemRepository hiddenGemRepository;
+
     /**
      * Get all adventure types ordered by name
      */
     public List<AdventureType> getAllAdventureTypes() {
-        return adventureTypeRepository.findAllOrderByName();
+        return adventureTypeRepository.findAllByOrderByNameAsc();
     }
 
     /**
      * Get adventure type by ID
      */
-    public Optional<AdventureType> getAdventureTypeById(Long id) {
+    public Optional<AdventureType> getAdventureTypeById(String id) {
         return adventureTypeRepository.findById(id);
     }
 
@@ -50,7 +52,7 @@ public class AdventureTypeService {
     /**
      * Update an existing adventure type
      */
-    public AdventureType updateAdventureType(Long id, AdventureType adventureTypeDetails) {
+    public AdventureType updateAdventureType(String id, AdventureType adventureTypeDetails) {
         AdventureType adventureType = adventureTypeRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Adventure type not found with id: " + id));
 
@@ -67,14 +69,14 @@ public class AdventureTypeService {
     /**
      * Delete an adventure type
      */
-    public void deleteAdventureType(Long id) {
+    public void deleteAdventureType(String id) {
         AdventureType adventureType = adventureTypeRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Adventure type not found with id: " + id));
 
-        // Check if adventure type has associated hidden gems
-        if (!adventureType.getHiddenGems().isEmpty()) {
-            throw new IllegalStateException("Cannot delete adventure type with associated hidden gems. " +
-                    "Please remove the association from hidden gems first.");
+        // Prevent deletion if any HiddenGem references this adventure type
+        long refCount = hiddenGemRepository.countByAdventureTypeIdsContains(id);
+        if (refCount > 0) {
+            throw new IllegalStateException("Cannot delete adventure type referenced by hidden gems (" + refCount + ").");
         }
 
         adventureTypeRepository.delete(adventureType);
@@ -84,7 +86,7 @@ public class AdventureTypeService {
      * Search adventure types by name
      */
     public List<AdventureType> searchAdventureTypesByName(String searchTerm) {
-        return adventureTypeRepository.findByNameContainingIgnoreCase(searchTerm);
+        return adventureTypeRepository.findByNameContainingIgnoreCaseOrderByNameAsc(searchTerm);
     }
 
     /**

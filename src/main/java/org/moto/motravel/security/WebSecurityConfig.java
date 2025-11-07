@@ -56,7 +56,7 @@ public class WebSecurityConfig {
             .cors(cors -> {})
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                    .requestMatchers("/api/auth/signin", "/api/auth/signup").permitAll()
+                    .requestMatchers("/api/auth/signin", "/api/auth/signup", "/api/auth/vendor-signup").permitAll()
                     .requestMatchers("/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
                     .requestMatchers("/h2-console/**").permitAll()
                     // Admin endpoints must have ADMIN authority

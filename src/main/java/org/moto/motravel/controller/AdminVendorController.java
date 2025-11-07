@@ -30,11 +30,40 @@ public class AdminVendorController {
     @Autowired private VehicleRepository vehicleRepository;
     @Autowired private BookingRepository bookingRepository;
     @Autowired private TourBookingRepository tourBookingRepository;
+    @Autowired private UserRepository userRepository;
 
     @GetMapping
     @Operation(summary = "List all vendors")
     public List<Vendor> listVendors() {
         return vendorRepository.findAll();
+    }
+
+    @GetMapping("/registration-requests")
+    @Operation(summary = "List vendor registration requests by status (default PENDING)")
+    public ResponseEntity<?> listRegistrationRequests(@RequestParam(required = false, defaultValue = "PENDING") String status) {
+        var list = vendorRepository.findByStatus(status.toUpperCase());
+        var result = new java.util.ArrayList<java.util.Map<String, Object>>();
+        var users = userRepository.findAll();
+        for (var v : list) {
+            String username = null;
+            for (var u : users) {
+                if (v.getId().equals(u.getVendorId())) { username = u.getUsername(); break; }
+            }
+            var dto = new java.util.HashMap<String, Object>();
+            dto.put("id", v.getId());
+            dto.put("name", v.getName());
+            dto.put("companyName", v.getCompanyName());
+            dto.put("email", v.getEmail());
+            dto.put("department", v.getDepartment());
+            dto.put("contactPhone", v.getContactPhone());
+            dto.put("status", v.getStatus());
+            dto.put("rejectionReason", v.getRejectionReason());
+            dto.put("createdAt", v.getCreatedAt());
+            dto.put("updatedAt", v.getUpdatedAt());
+            dto.put("username", username);
+            result.add(dto);
+        }
+        return ResponseEntity.ok(result);
     }
 
     @PostMapping
@@ -47,7 +76,7 @@ public class AdminVendorController {
 
     @GetMapping("/{id}")
     @Operation(summary = "Get vendor details with related assets counts")
-    public ResponseEntity<?> getVendor(@PathVariable Long id) {
+    public ResponseEntity<?> getVendor(@PathVariable String id) {
         return vendorRepository.findById(id)
                 .map(v -> {
                     Map<String,Object> dto = new HashMap<>();
@@ -66,12 +95,20 @@ public class AdminVendorController {
 
     @PutMapping("/{id}")
     @Operation(summary = "Update vendor")
-    public ResponseEntity<?> updateVendor(@PathVariable Long id, @Valid @RequestBody Vendor updates) {
+    public ResponseEntity<?> updateVendor(@PathVariable String id, @Valid @RequestBody Vendor updates) {
         return vendorRepository.findById(id)
                 .map(v -> {
                     v.setName(updates.getName());
                     v.setEmail(updates.getEmail());
-                    v.setPhone(updates.getPhone());
+                    v.setContactPhone(updates.getContactPhone());
+                    if (updates.getCompanyName() != null) v.setCompanyName(updates.getCompanyName());
+                    if (updates.getDepartment() != null) {
+                        String dept = updates.getDepartment().trim().toUpperCase();
+                        if (!"TOUR".equals(dept) && !"VEHICLE".equals(dept)) {
+                            dept = v.getDepartment();
+                        }
+                        v.setDepartment(dept);
+                    }
                     if (updates.getStatus() != null) v.setStatus(updates.getStatus());
                     return ResponseEntity.ok(vendorRepository.save(v));
                 })
@@ -80,12 +117,39 @@ public class AdminVendorController {
 
     @PatchMapping("/{id}/status")
     @Operation(summary = "Activate/Deactivate vendor")
-    public ResponseEntity<?> setVendorStatus(@PathVariable Long id, @RequestParam String status) {
+    public ResponseEntity<?> setVendorStatus(@PathVariable String id, @RequestParam String status) {
         return vendorRepository.findById(id)
                 .map(v -> {
                     v.setStatus(status);
                     vendorRepository.save(v);
                     return ResponseEntity.ok(new MessageResponse("Vendor status updated"));
+                })
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PostMapping("/{id}/approve")
+    @Operation(summary = "Approve vendor registration")
+    public ResponseEntity<?> approveVendor(@PathVariable String id) {
+        return vendorRepository.findById(id)
+                .map(v -> {
+                    v.setStatus("APPROVED");
+                    v.setRejectionReason(null);
+                    vendorRepository.save(v);
+                    return ResponseEntity.ok(new MessageResponse("Vendor approved"));
+                })
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PostMapping("/{id}/reject")
+    @Operation(summary = "Reject vendor registration")
+    public ResponseEntity<?> rejectVendor(@PathVariable String id, @RequestBody(required = false) Map<String, String> body) {
+        String reason = body != null ? body.getOrDefault("reason", null) : null;
+        return vendorRepository.findById(id)
+                .map(v -> {
+                    v.setStatus("REJECTED");
+                    v.setRejectionReason(reason);
+                    vendorRepository.save(v);
+                    return ResponseEntity.ok(new MessageResponse("Vendor rejected"));
                 })
                 .orElse(ResponseEntity.notFound().build());
     }

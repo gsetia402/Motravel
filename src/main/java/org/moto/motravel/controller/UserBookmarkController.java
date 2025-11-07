@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.moto.motravel.model.HiddenGemBookmark;
 import org.moto.motravel.service.HiddenGemBookmarkService;
+import org.moto.motravel.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
@@ -28,6 +29,9 @@ public class UserBookmarkController {
     @Autowired
     private HiddenGemBookmarkService bookmarkService;
 
+    @Autowired
+    private UserRepository userRepository;
+
     @GetMapping
     @Operation(summary = "Get user's bookmarked hidden gems")
     public ResponseEntity<?> getUserBookmarks(
@@ -38,7 +42,8 @@ public class UserBookmarkController {
 
         try {
             UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-            Long userId = Long.parseLong(userDetails.getUsername());
+            String username = userDetails.getUsername();
+            String userId = userRepository.findByUsername(username).map(u -> u.getId()).orElse(null);
 
             if (page == -1) {
                 // Return all bookmarks without pagination
@@ -62,7 +67,8 @@ public class UserBookmarkController {
     public ResponseEntity<?> getUserBookmarkCount() {
         try {
             UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-            Long userId = Long.parseLong(userDetails.getUsername());
+            String username = userDetails.getUsername();
+            String userId = userRepository.findByUsername(username).map(u -> u.getId()).orElse(null);
 
             long count = bookmarkService.getUserBookmarkCount(userId);
             return ResponseEntity.ok(Map.of("bookmarkCount", count));
@@ -73,10 +79,11 @@ public class UserBookmarkController {
 
     @GetMapping("/check/{hiddenGemId}")
     @Operation(summary = "Check if user has bookmarked a specific hidden gem")
-    public ResponseEntity<?> checkBookmarkStatus(@PathVariable Long hiddenGemId) {
+    public ResponseEntity<?> checkBookmarkStatus(@PathVariable String hiddenGemId) {
         try {
             UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-            Long userId = Long.parseLong(userDetails.getUsername());
+            String username = userDetails.getUsername();
+            String userId = userRepository.findByUsername(username).map(u -> u.getId()).orElse(null);
 
             boolean isBookmarked = bookmarkService.isBookmarked(userId, hiddenGemId);
             return ResponseEntity.ok(Map.of(

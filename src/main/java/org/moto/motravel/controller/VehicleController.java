@@ -33,7 +33,7 @@ public class VehicleController {
 
     @GetMapping("/{id}")
     @Operation(summary = "Get vehicle by ID")
-    public ResponseEntity<?> getVehicleById(@PathVariable Long id) {
+    public ResponseEntity<?> getVehicleById(@PathVariable String id) {
         return vehicleService.getVehicleById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
@@ -67,7 +67,7 @@ public class VehicleController {
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Update a vehicle", security = @SecurityRequirement(name = "bearerAuth"))
-    public ResponseEntity<?> updateVehicle(@PathVariable Long id, @Valid @RequestBody Vehicle vehicleDetails) {
+    public ResponseEntity<?> updateVehicle(@PathVariable String id, @Valid @RequestBody Vehicle vehicleDetails) {
         return vehicleService.getVehicleById(id)
                 .map(vehicle -> {
                     vehicle.setModel(vehicleDetails.getModel());
@@ -89,7 +89,7 @@ public class VehicleController {
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Update vehicle availability", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<?> updateVehicleAvailability(
-            @PathVariable Long id,
+            @PathVariable String id,
             @RequestParam Boolean availability) {
         
         boolean updated = vehicleService.updateVehicleAvailability(id, availability);
@@ -104,7 +104,7 @@ public class VehicleController {
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Delete a vehicle", security = @SecurityRequirement(name = "bearerAuth"))
-    public ResponseEntity<?> deleteVehicle(@PathVariable Long id) {
+    public ResponseEntity<?> deleteVehicle(@PathVariable String id) {
         return vehicleService.getVehicleById(id)
                 .map(vehicle -> {
                     vehicleService.deleteVehicle(id);
